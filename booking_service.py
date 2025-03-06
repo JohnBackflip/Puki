@@ -106,6 +106,15 @@ def create_booking():
         return jsonify({"code": 500, "message": f"Error creating booking: {str(e)}"}), 500
 
 
+@app.route("/bookings/<int:booking_id>", methods=["GET"])
+def get_booking(booking_id):
+    booking = db.session.scalar(db.select(Booking).filter_by(booking_id=booking_id))
+
+    if not booking:
+        return jsonify({"code": 404, "message": "Booking not found."}), 404
+
+    return jsonify({"code": 200, "data": booking.json()}), 200
+
 # get all bookings
 @app.route("/bookings", methods=["GET"])
 def get_all_bookings():
@@ -150,6 +159,11 @@ def update_booking(booking_id):
     booking.room_id = new_room_id
     booking.check_in_date = new_check_in
     booking.check_out_date = new_check_out
+
+    if "status" in data:
+        if data["status"] not in ["CONFIRMED", "CANCELLED", "CHECKED-IN", "CHECKED-OUT"]:
+            return jsonify({"code": 400, "message": "Invalid status update."}), 400
+        booking.status = data["status"]
 
     try:
         db.session.commit()
