@@ -49,12 +49,12 @@ with app.app_context():
     db.create_all()
 
 
-# ✅ Generate a New Keycard
+# generate a New Keycard
 @app.route("/keycards", methods=["POST"])
 def generate_keycard():
     data = request.get_json()
 
-    # Check if a keycard already exists for this booking
+    # check if a keycard already exists for this booking
     existing_keycard = db.session.scalar(db.select(Keycard).filter_by(booking_id=data["booking_id"]))
 
     if existing_keycard:
@@ -77,14 +77,14 @@ def generate_keycard():
         return jsonify({"code": 500, "message": f"Error generating keycard: {str(e)}"}), 500
 
 
-# ✅ Get Keycard by Booking ID
+# get keycard by booking_ID
 @app.route("/keycards/<int:booking_id>", methods=["GET"])
 def get_keycard(booking_id):
     keycard = db.session.scalar(db.select(Keycard).filter_by(booking_id=booking_id))
     return jsonify({"code": 200, "data": keycard.json()}) if keycard else jsonify({"code": 404, "message": "Keycard not found."}), 404
 
 
-# ✅ Renew Keycard (Reissue a new PIN)
+# renew keycard (Reissue a new PIN)
 @app.route("/keycards/<int:booking_id>/renew", methods=["PUT"])
 def renew_keycard(booking_id):
     keycard = db.session.scalar(db.select(Keycard).filter_by(booking_id=booking_id))
@@ -104,7 +104,7 @@ def renew_keycard(booking_id):
         return jsonify({"code": 500, "message": f"Error renewing keycard: {str(e)}"}), 500
 
 
-# ✅ Expire Keycard (User checks out)
+# eexpire keycard (User checks out)
 @app.route("/keycards/<int:booking_id>/expire", methods=["PUT"])
 def expire_keycard(booking_id):
     keycard = db.session.scalar(db.select(Keycard).filter_by(booking_id=booking_id))
