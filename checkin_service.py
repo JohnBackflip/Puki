@@ -1,3 +1,4 @@
+import random
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
@@ -5,15 +6,16 @@ import requests
 app = Flask(__name__)
 CORS(app)
 
-# checkIn Function
-@app.route("/checkin", methods=["POST"])
-def checkin_guest():
+app.json.sort_keys = False 
+
+# ✅ Self Check-In (Now Verifies Full Name)
+@app.route("/self-checkin", methods=["POST"])
+def self_checkin():
     data = request.get_json()
-
     booking_id = data["booking_id"]
-    user_id = data["user_id"]  #staff performing check-in
+    full_name = data["full_name"]  # ✅ Now requires full name
 
-    #verify Booking Exists in `booking_service`
+    # ✅ Step 1: Verify Booking Exists
     booking_url = f"http://localhost:5002/bookings/{booking_id}"
     booking_response = requests.get(booking_url)
 
@@ -21,23 +23,28 @@ def checkin_guest():
         return jsonify({"code": 400, "message": "Invalid booking ID."}), 400
 
     booking_data = booking_response.json()["data"]
-    room_id = booking_data["room_id"]
     customer_id = booking_data["customer_id"]
+    room_id = booking_data["room_id"]
 
-    # verify user exists in user_management
-    user_url = f"http://localhost:5001/users/{user_id}/exists"
-    user_response = requests.get(user_url)
+    # ✅ Step 2: Verify Customer Exists & Is Verified
+    customer_url = f"http://localhost:5003/customers/{customer_id}"
+    customer_response = requests.get(customer_url)
 
-    if user_response.status_code != 200:
-        return jsonify({"code": 400, "message": "Invalid staff user_id."}), 400
-    
-    #do user verification somehow (i honestly hv 0 clue)
+    if customer_response.status_code != 200:
+        return jsonify({"code": 400, "message": "Customer record not found."}), 400
 
-    # generate keycard in security_service
+    customer_data = customer_response.json()["data"]
+
+    if not customer_data["verified"]:
+        return jsonify({"code": 400, "message": "Customer is not verified."}), 400
+
+    if customer_data["name"].lower() != full_name.lower():  # ✅ Now checks full name
+        return jsonify({"code": 400, "message": "Full name does not match booking record."}), 400
+
+    # ✅ Step 3: Generate Keycard in `security_service`
     keycard_url = "http://localhost:5004/keycards"
     keycard_payload = {
         "booking_id": booking_id,
-        "user_id": user_id,
         "customer_id": customer_id,
         "room_id": room_id
     }
@@ -49,17 +56,14 @@ def checkin_guest():
 
     keycard_data = keycard_response.json()["data"]
 
-    # update booking and room status to CHECKED-IN
+    # ✅ Step 4: Update Booking Status to `CHECKED-IN`
     update_booking_url = f"http://localhost:5002/bookings/{booking_id}"
     update_payload = {"status": "CHECKED-IN"}
-    update_response = requests.put(update_booking_url, json=update_payload)
-
-    if update_response.status_code != 200:
-        return jsonify({"code": 500, "message": "Failed to update booking status."}), 500
+    requests.put(update_booking_url, json=update_payload)
 
     return jsonify({
         "code": 200,
-        "message": "Guest checked in successfully.",
+        "message": "Self check-in successful. Use this PIN to access your room.",
         "keycard": keycard_data
     }), 200
 

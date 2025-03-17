@@ -8,9 +8,11 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app)
 
+app.json.sort_keys = False 
+
 # Database Configuration
 app.config["SQLALCHEMY_DATABASE_URI"] = (
-    environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/booking"
+    environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/puki"
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_recycle": 299}
@@ -84,7 +86,13 @@ def create_booking():
     customer_check_url = f"http://localhost:5003/customers/{data['customer_id']}"
     customer_response = requests.get(customer_check_url)
 
+    print(f"Customer Check URL: {customer_check_url}")  # ✅ Debugging
+    print(f"Customer API Status Code: {customer_response.status_code}")  # ✅ Debugging
+    print(f"Customer API Response: {customer_response.json()}")  # ✅ Debugging
+
+
     if customer_response.status_code != 200:
+        print(f"Customer API Response: {customer_response.json()}")
         return jsonify({"code": 400, "message": "Invalid customer_id. Customer does not exist."}), 400
 
     # create the booking
