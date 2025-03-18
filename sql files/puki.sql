@@ -1,4 +1,4 @@
--- js run this file 
+-- js run this file dont need run the others (for intergration)
 
 CREATE DATABASE IF NOT EXISTS PUKI;
 USE puki;
@@ -58,3 +58,11 @@ CREATE TABLE keycard (
 	FOREIGN KEY (booking_id) REFERENCES booking(booking_id) ON DELETE CASCADE,
     FOREIGN KEY (customer_id) REFERENCES customer(customer_id) ON DELETE CASCADE
 );
+
+CREATE TABLE room (
+    room_id VARCHAR(36) PRIMARY KEY, 
+    room_type ENUM('Single', 'Double', 'Family', 'PresidentialRooms') NOT NULL,
+    status ENUM('VACANT', 'OCCUPIED', 'UNAVAI') DEFAULT 'VACANT',
+    room_pin VARCHAR(6) DEFAULT NULL  
+);
+

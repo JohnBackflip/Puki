@@ -1,0 +1,16 @@
+process 
+(maybe have a feature in front end show which rooms are avai for the dates they selected so maybe gray out specific room types )
+user makes a booking online/ on premise (very rare)
+
+if online (a default user id is given to the booking (called online booking or something))
+
+they can edit the booking before the date/ during thier stay also (can also cancel booking)
+
+booking auto assigns them a room based on the type of room they asked for (room management) based on availability 
+
+self check in: 
+user checks in through a kiosk or something
+(keys in their booking id and their full name )
+
+once checked in -> the booking status is updated to checked-in and room key is generated and sent to them via notification service
+

@@ -80,7 +80,7 @@ def generate_keycard():
         customer_id=data["customer_id"],
         room_id=data["room_id"],
         key_pin=str(random.randint(000000, 999999)).zfill(6),  
-        expires_at=expires_at  # ✅ Now automatically set to check-out at 3 PM
+        expires_at=expires_at 
     )
 
     try:
@@ -92,14 +92,14 @@ def generate_keycard():
         return jsonify({"code": 500, "message": f"Error generating keycard: {str(e)}"}), 500
 
 
-# ✅ Get Keycard by Booking ID
+# get pin for booking id (testing purposes)
 @app.route("/keycards/<int:booking_id>", methods=["GET"])
 def get_keycard(booking_id):
     keycard = db.session.scalar(db.select(Keycard).filter_by(booking_id=booking_id))
     return jsonify({"code": 200, "data": keycard.json()}) if keycard else jsonify({"code": 404, "message": "Keycard not found."}), 404
 
 
-# ✅ Renew Keycard (Reissue a New PIN)
+# generates new pin for the booking
 @app.route("/keycards/<int:booking_id>/renew", methods=["PUT"])
 def renew_keycard(booking_id):
     keycard = db.session.scalar(db.select(Keycard).filter_by(booking_id=booking_id))
@@ -109,7 +109,7 @@ def renew_keycard(booking_id):
 
     keycard.key_pin = str(random.randint(000000, 999999)).zfill(6) 
     keycard.issued_at = datetime.utcnow()
-    keycard.expires_at = None  # ✅ Reset expiration
+    keycard.expires_at = None  
 
     try:
         db.session.commit()
@@ -119,7 +119,7 @@ def renew_keycard(booking_id):
         return jsonify({"code": 500, "message": f"Error renewing keycard: {str(e)}"}), 500
 
 
-# ✅ Expire Keycard (User Checks Out)
+# expire keycard (when user checks out)
 @app.route("/keycards/<int:booking_id>/expire", methods=["PUT"])
 def expire_keycard(booking_id):
     keycard = db.session.scalar(db.select(Keycard).filter_by(booking_id=booking_id))
@@ -135,6 +135,25 @@ def expire_keycard(booking_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"code": 500, "message": f"Error expiring keycard: {str(e)}"}), 500
+
+# used when booking is extended
+@app.route("/keycards/<int:booking_id>/update-expiry", methods=["PUT"])
+def update_keycard_expiry(booking_id):
+    data = request.get_json()
+    keycard = db.session.scalar(db.select(Keycard).filter_by(booking_id=booking_id))
+
+    if not keycard:
+        return jsonify({"code": 404, "message": "Keycard not found."}), 404
+
+    # keep the same key PIN 
+    keycard.expires_at = datetime.strptime(data["expires_at"], "%Y-%m-%d %H:%M:%S")
+
+    try:
+        db.session.commit()
+        return jsonify({"code": 200, "data": keycard.json()}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"code": 500, "message": f"Error updating keycard expiry: {str(e)}"}), 500
 
 
 if __name__ == "__main__":

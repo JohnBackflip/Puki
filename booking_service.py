@@ -42,6 +42,7 @@ class Booking(db.Model):
             "check_out_date": str(self.check_out_date),
             "status": self.status
         }
+    #dont worry about self bookings, have the id be a dummy account, perhaps (account name SELF)
 
 
 # Auto-create table if it doesn't exist
@@ -127,8 +128,13 @@ def get_booking(booking_id):
 @app.route("/bookings", methods=["GET"])
 def get_all_bookings():
     bookinglist = db.session.scalars(db.select(Booking)).all()
-    return jsonify({"code": 200, "data": {"bookings": [b.json() for b in bookinglist]}}) if bookinglist else jsonify({"code": 404, "message": "No bookings found."}), 404
 
+    print(f"DEBUG: Booking list fetched - {bookinglist}") 
+
+    if bookinglist:
+        return jsonify({"code": 200, "data": {"bookings": [b.json() for b in bookinglist]}}), 200
+    
+    return jsonify({"code": 404, "message": "No bookings found."}), 404
 
 # update booking (Switch Room or Dates)
 @app.route("/bookings/<int:booking_id>", methods=["PUT"])
@@ -175,6 +181,13 @@ def update_booking(booking_id):
 
     try:
         db.session.commit()
+
+        #updates the expiry date of the keycard (only when person is checked in then extension updates keycard)
+        if booking.status == "CHECKED-IN":
+            update_keycard_url = f"http://localhost:5004/keycards/{booking_id}/update-expiry"
+            keycard_payload = {"expires_at": new_check_out.strftime("%Y-%m-%d") + " 15:00:00"}
+            requests.put(update_keycard_url, json=keycard_payload)
+
         return jsonify({"code": 200, "data": booking.json()}), 200
     except Exception as e:
         db.session.rollback()

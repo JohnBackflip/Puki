@@ -86,7 +86,7 @@ def create_customer():
 def get_all_customers():
     customer_list = db.session.scalars(db.select(Customer)).all()
 
-    if customer_list and len(customer_list) > 0:  # ✅ Ensures empty lists don't trigger 404
+    if customer_list and len(customer_list) > 0: 
         return jsonify({"code": 200, "data": {"customers": [c.json() for c in customer_list]}}), 200
     
     return jsonify({"code": 404, "message": "No customers found."}), 404
@@ -163,17 +163,17 @@ def request_new_otp(customer_id):
     if not customer:
         return jsonify({"code": 404, "message": "Customer not found."}), 404
 
-    # ✅ Generate a new 6-digit OTP
+    # 6 digit otp created
     new_otp = str(random.randint(100000, 999999))
     otp_expiry = datetime.utcnow() + timedelta(minutes=5)  # OTP valid for 5 minutes
 
-    # ✅ Update the database with the new OTP
+    # db updated w newest otp 
     customer.otp = new_otp
     customer.otp_expiry = otp_expiry
 
     try:
         db.session.commit()
-        # ✅ Simulate sending OTP (Replace with actual email/SMS API)
+        # sends otp to api for now
         print(f"New OTP for {customer.email}: {new_otp}")
         return jsonify({"code": 200, "message": "New OTP sent to registered email/phone."}), 200
     except Exception as e:

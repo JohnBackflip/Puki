@@ -8,14 +8,14 @@ CORS(app)
 
 app.json.sort_keys = False 
 
-# ✅ Self Check-In (Now Verifies Full Name)
+# self check-in with full_name
 @app.route("/self-checkin", methods=["POST"])
 def self_checkin():
     data = request.get_json()
     booking_id = data["booking_id"]
-    full_name = data["full_name"]  # ✅ Now requires full name
+    full_name = data["full_name"] 
 
-    # ✅ Step 1: Verify Booking Exists
+    # verify booking exists
     booking_url = f"http://localhost:5002/bookings/{booking_id}"
     booking_response = requests.get(booking_url)
 
@@ -26,7 +26,7 @@ def self_checkin():
     customer_id = booking_data["customer_id"]
     room_id = booking_data["room_id"]
 
-    # ✅ Step 2: Verify Customer Exists & Is Verified
+    # verify customer exists and is Verified
     customer_url = f"http://localhost:5003/customers/{customer_id}"
     customer_response = requests.get(customer_url)
 
@@ -41,7 +41,7 @@ def self_checkin():
     if customer_data["name"].lower() != full_name.lower():  # ✅ Now checks full name
         return jsonify({"code": 400, "message": "Full name does not match booking record."}), 400
 
-    # ✅ Step 3: Generate Keycard in `security_service`
+    # generate keycard in `security_service`
     keycard_url = "http://localhost:5004/keycards"
     keycard_payload = {
         "booking_id": booking_id,
@@ -56,7 +56,7 @@ def self_checkin():
 
     keycard_data = keycard_response.json()["data"]
 
-    # ✅ Step 4: Update Booking Status to `CHECKED-IN`
+    # update booking status to `CHECKED-IN`
     update_booking_url = f"http://localhost:5002/bookings/{booking_id}"
     update_payload = {"status": "CHECKED-IN"}
     requests.put(update_booking_url, json=update_payload)
