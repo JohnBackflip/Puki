@@ -1,6 +1,7 @@
 import random
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from datetime import datetime
 import requests
 
 app = Flask(__name__)
@@ -25,6 +26,12 @@ def self_checkin():
     booking_data = booking_response.json()["data"]
     customer_id = booking_data["customer_id"]
     room_id = booking_data["room_id"]
+    check_in_date = datetime.strptime(booking_data["check_in_date"], "%Y-%m-%d").date()
+
+    # checks if today is the check-in date
+    today = datetime.utcnow().date()
+    if today != check_in_date:
+        return jsonify({"code": 400, "message": "Check-in is only allowed on the check-in date."}), 400
 
     # verify customer exists and is Verified
     customer_url = f"http://localhost:5003/customers/{customer_id}"
@@ -38,7 +45,7 @@ def self_checkin():
     if not customer_data["verified"]:
         return jsonify({"code": 400, "message": "Customer is not verified."}), 400
 
-    if customer_data["name"].lower() != full_name.lower():  # ✅ Now checks full name
+    if customer_data["name"].lower() != full_name.lower():  
         return jsonify({"code": 400, "message": "Full name does not match booking record."}), 400
 
     # generate keycard in `security_service`

@@ -14,3 +14,6 @@ user checks in through a kiosk or something
 
 once checked in -> the booking status is updated to checked-in and room key is generated and sent to them via notification service
 
+
+
+MAIN PROB: HOW TO MANAGE THE HOTEL ROOMS, PRVENT BOOKING IF U FORSEE THAT THIS ROOM IS UNAVAILABLE
