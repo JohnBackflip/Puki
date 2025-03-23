@@ -63,6 +63,16 @@ def self_checkin():
 
     keycard_data = keycard_response.json()["data"]
 
+    # update room pin in room_service
+    room_update_url = f"http://localhost:5006/rooms/{room_id}/update-pin"
+    room_update_payload = {
+        "room_pin": keycard_data["key_pin"]
+    }
+    room_response = requests.put(room_update_url, json=room_update_payload)
+
+    if room_response.status_code != 200:
+        print("Failed to update room pin:", room_response.json())
+
     # update booking status to `CHECKED-IN`
     update_booking_url = f"http://localhost:5002/bookings/{booking_id}"
     update_payload = {"status": "CHECKED-IN"}

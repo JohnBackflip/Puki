@@ -17,3 +17,18 @@ once checked in -> the booking status is updated to checked-in and room key is g
 
 
 MAIN PROB: HOW TO MANAGE THE HOTEL ROOMS, PRVENT BOOKING IF U FORSEE THAT THIS ROOM IS UNAVAILABLE
+
+
+
+
+
+23/3/2025 
+
+Current Process: 
+- customer makes a booking
+- can only check-in if the booking check in date matches today
+- once checked in, the room pin is generated and it updates the room service, which updates the password for the keycard
+
+todo: work on the rabbitmq of the notification service
+
+

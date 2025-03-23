@@ -103,5 +103,22 @@ def get_room_pin(room_id):
     return jsonify({"code": 200, "data": {"room_id": room.room_id, "room_pin": room.room_pin}}), 200
 
 
+@app.route("/rooms/<string:room_id>/update-pin", methods=["PUT"])
+def update_room_pin(room_id):
+    data = request.get_json()
+    room = db.session.scalar(db.select(Room).filter_by(room_id=room_id))
+
+    if not room:
+        return jsonify({"code": 404, "message": "Room not found."}), 404
+
+    room.room_pin = data.get("room_pin")
+
+    try:
+        db.session.commit()
+        return jsonify({"code": 200, "data": room.json()}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"code": 500, "message": f"Error updating room pin: {str(e)}"}), 500
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5006, debug=True)
