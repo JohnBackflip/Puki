@@ -79,7 +79,7 @@
         input,
         select {
             width: 100%;
-            padding: 8px;
+            padding: 6px;
             font-size: 16px;
             border: 1px solid #ccc;
             border-radius: 5px;
@@ -101,12 +101,12 @@
             color: #fff;
             border: none;
             border-radius: 25px;
-            padding: 12px;
+            padding: 10px;
             font-size: 16px;
             font-weight: bold;
             text-transform: uppercase;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 65px;
             width: 100%;
         }
 
@@ -118,6 +118,38 @@
         .booking-summary p {
             margin-top: 10px;
             font-size: 16px;
+        }
+
+        .payment-details {
+            width: 100%;
+            margin: auto;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .payment-details label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+
+        #card-element {
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 15px;
+            font-size: 16px;
+            margin-top: 5px;
+            width: 100%;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            transition: 0.3s ease-in-out;
+        }
+
+        #card-element:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
         }
     </style>
 </head>
@@ -185,8 +217,8 @@
                         <option value="Mrs">Mrs</option>
                     </select>
 
-                    <label for="firstName">Full Name</label>
-                    <input type="text" id="firstName" name="firstName" required>
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" name="fullName" required>
 
                     <label for="phoneNumber">Phone Number</label>
                     <div class="phone-group">
@@ -209,7 +241,7 @@
             </div>
 
             <!-- Payment Details -->
-            <div class="payment-details">
+            <!-- <div class="payment-details">
                 <h2>Payment Details</h2>
                 <form id="paymentForm">
                     <label for="cardNumber">Card Number</label>
@@ -223,29 +255,41 @@
 
                     <label for="cardName">Cardholder Name</label>
                     <input type="text" id="cardName" name="cardName" required>
+                    <div id="card-element"></div>
+                </form>
+            </div>
+        </div> -->
+            <div class="payment-details">
+                <h2>Payment Details</h2>
+                <form id="paymentForm">
+                    <label for="cardName">Cardholder Name</label>
+                    <input type="text" id="cardName" name="cardName" required>
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                    <label for="card-element">Card Details</label>
+                    <div id="card-element"></div> <!-- Stripe Card Input -->
+                    <div id="card-errors" role="alert"></div> <!-- Error messages -->
 
-                    <!-- <button type="submit" class="btn-confirm">Confirm Reservation</button> -->
                 </form>
             </div>
         </div>
 
         <!-- Booking Summary (Right) -->
         <div class="booking-summary">
-            <img id="roomImage" src="" alt="Room Image">
-            <h2 id="hotelName" style="margin-top: 30px; margin-bottom: 20px; font-size: 30px; font-weight: bold;"></h2>
+            <img src="images/slider-7.jpg" alt="Room Image">
+            <h2 style="margin-top: 30px; margin-bottom: 20px; font-size: 30px; font-weight: bold;">Puki Hotel</h2>
 
-            <p><strong>Check-In:</strong> <span id="arrivalDate"></span></p>
-            <p><strong>Check-Out:</strong> <span id="departureDate"></span></p>
-            <p><strong>Number of Nights:</strong> <span id="nights"></span></p>
-            <p><strong>Check-In Time:</strong> 15:00 PM</p>
-            <p><strong>Check-Out Time:</strong> 12:00 PM</p>
+            <p><strong>Arrival:</strong> <span style="font-weight: bold" id="arrivalDate"></span></p>
+            <p><strong>Departure:</strong> <span style="font-weight: bold" id="departureDate"></span></p>
+            <p><strong>Check-In Time:</strong> <span style="font-weight: bold">15:00 PM</span></p>
+            <p><strong>Check-Out Time:</strong>  <span style="font-weight: bold">12:00 PM</span></p>
 
-            <div class="divider"></div>
+            <div style="border-bottom: 1px solid #ccc; margin: 15px 0;"></div>
 
-            <p><strong>Room Type:</strong> <span id="roomType"></span></p>
-            <p><strong>Guests:</strong> <span id="guestCount"></span></p>
+            <p><strong>Room Type:</strong> <span style="font-weight: bold" id="roomType"></span></p>
+            <p><strong>Guests:</strong> <span style="font-weight: bold" id="guestCount"></span></p>
 
-            <div class="divider"></div>
+            <div style="border-bottom: 1px solid #ccc; margin: 15px 0;"></div>
 
             <h3 style="font-size: 25px;">Total Cost: S$<span id="totalCost"></span></h3>
             <!-- Confirm Reservation Button (Right-Aligned) -->
@@ -254,8 +298,9 @@
             </div> -->
             <!-- Confirm Reservation Button at the Bottom -->
             <div class="confirm-btn-container">
-                <button type="submit" class="btn btn-confirm" data-amount="1000" data-currency="SGD" data-description="single room">
-                    Confirm Reservation
+                <button type="submit" class="btn btn-confirm" data-amount="1000" data-currency="SGD"
+                    data-description="single room">
+                    Confirm Booking
                 </button>
             </div>
 
