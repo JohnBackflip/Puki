@@ -1,0 +1,363 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Puki Hotel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <meta name="author" content="" />
+    <link rel="stylesheet" type="text/css"
+        href="//fonts.googleapis.com/css?family=|Roboto+Sans:400,700|Playfair+Display:400,700">
+
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/animate.css">
+    <link rel="stylesheet" href="css/owl.carousel.min.css">
+    <link rel="stylesheet" href="css/aos.css">
+    <link rel="stylesheet" href="css/bootstrap-datepicker.css">
+    <link rel="stylesheet" href="css/jquery.timepicker.css">
+    <link rel="stylesheet" href="css/fancybox.min.css">
+
+    <link rel="stylesheet" href="fonts/ionicons/css/ionicons.min.css">
+    <link rel="stylesheet" href="fonts/fontawesome/css/font-awesome.min.css">
+
+    <!-- Theme Style -->
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            gap: 30px;
+            padding: 40px;
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        .guest-payment-container {
+            width: 55%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .guest-details,
+        .payment-details {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .booking-summary {
+            width: 40%;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+
+        .phone-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .phone-group select,
+        .phone-group input {
+            flex: 1;
+        }
+
+        .btn-confirm {
+            background-color: #f7c744;
+            color: #fff;
+            border: none;
+            border-radius: 25px;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .booking-summary img {
+            width: 100%;
+            border-radius: 5px;
+        }
+
+        .booking-summary p {
+            margin-top: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="container-fluid">
+            <div class="row align-items-center" style="height: 80px;"> <!-- Adjust height -->
+                <!-- Logo Section -->
+                <div class="col-6 col-lg-4 site-logo text-center" data-aos="fade">
+                    <a href="index.html"
+                        style="font-size: 28px; font-weight: bold; text-decoration: none; color: #000;">Puki Hotel</a>
+                </div>
+
+                <!-- Toggle Menu Section -->
+                <div class="site-menu-toggle js-site-menu-toggle" data-aos="fade" style="margin-top: 15px;">
+                    <span style="background-color: #000"></span>
+                    <span style="background-color: #000"></span>
+                    <span style="background-color: #000"></span>
+                </div>
+
+                <!-- Navigation Menu -->
+                <div class="site-navbar js-site-navbar" style="display: none;">
+                    <nav role="navigation">
+                        <div class="container">
+                            <div class="row full-height align-items-center">
+                                <div class="col-md-6 mx-auto">
+                                    <ul class="list-unstyled menu text-center">
+                                        <li><a href="index.html">Home</a></li>
+                                        <li><a href="rooms.html">Rooms</a></li>
+                                        <li><a href="about.html">About</a></li>
+                                        <li><a href="events.html">Events</a></li>
+                                        <li><a href="contact.html">Contact</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+        </div>
+    </header>
+    <!-- END head -->
+    <!-- Booking Information Section -->
+    <section class="section bg-light py-5 text-center">
+        <h2>Complete Your Booking</h2>
+        <p>Please note that your booking is only confirmed upon successful payment.</p>
+    </section>
+
+    <div class="container">
+        <!-- Guest & Payment Details Section (Left) -->
+        <div class="guest-payment-container">
+
+            <!-- Guest Details -->
+            <div class="guest-details">
+                <h2>Guest Details</h2>
+                <form id="guestForm">
+                    <label for="title">Title</label>
+                    <select id="title" name="title" required>
+                        <option value="" disabled selected>Select</option>
+                        <option value="Mr">Mr</option>
+                        <option value="Ms">Ms</option>
+                        <option value="Mrs">Mrs</option>
+                    </select>
+
+                    <label for="firstName">Full Name</label>
+                    <input type="text" id="firstName" name="firstName" required>
+
+                    <label for="phoneNumber">Phone Number</label>
+                    <div class="phone-group">
+                        <select id="countryCode" name="countryCode" required>
+                            <option value="+65">+65</option>
+                            <option value="+60">+60</option>
+                            <option value="+62">+62</option>
+                            <option value="+91">+91</option>
+                            <option value="+86">+86</option>
+                            <option value="+61">+61</option>
+                            <option value="+82">+82</option>
+                            <option value="+66">+66</option>
+                        </select>
+                        <input type="text" id="localNumber" name="localNumber" required placeholder="Phone Number">
+                    </div>
+
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email">
+                </form>
+            </div>
+
+            <!-- Payment Details -->
+            <div class="payment-details">
+                <h2>Payment Details</h2>
+                <form id="paymentForm">
+                    <label for="cardNumber">Card Number</label>
+                    <input type="text" id="cardNumber" name="cardNumber" required>
+
+                    <label for="expiryDate">Expiry Date</label>
+                    <input type="text" id="expiryDate" name="expiryDate" placeholder="MM/YY" required>
+
+                    <label for="cvc">CVC</label>
+                    <input type="text" id="cvc" name="cvc" required>
+
+                    <label for="cardName">Cardholder Name</label>
+                    <input type="text" id="cardName" name="cardName" required>
+
+                    <!-- <button type="submit" class="btn-confirm">Confirm Reservation</button> -->
+                </form>
+            </div>
+        </div>
+
+        <!-- Booking Summary (Right) -->
+        <div class="booking-summary">
+            <img id="roomImage" src="" alt="Room Image">
+            <h2 id="hotelName" style="margin-top: 30px; margin-bottom: 20px; font-size: 30px; font-weight: bold;"></h2>
+
+            <p><strong>Check-In:</strong> <span id="arrivalDate"></span></p>
+            <p><strong>Check-Out:</strong> <span id="departureDate"></span></p>
+            <p><strong>Number of Nights:</strong> <span id="nights"></span></p>
+            <p><strong>Check-In Time:</strong> 15:00 PM</p>
+            <p><strong>Check-Out Time:</strong> 12:00 PM</p>
+
+            <div class="divider"></div>
+
+            <p><strong>Room Type:</strong> <span id="roomType"></span></p>
+            <p><strong>Guests:</strong> <span id="guestCount"></span></p>
+
+            <div class="divider"></div>
+
+            <h3 style="font-size: 25px;">Total Cost: S$<span id="totalCost"></span></h3>
+            <!-- Confirm Reservation Button (Right-Aligned) -->
+            <!-- <div class="confirm-btn-container">
+                <button type="submit" class="btn-confirm">Confirm Reservation</button>
+            </div> -->
+            <!-- Confirm Reservation Button at the Bottom -->
+            <div class="confirm-btn-container">
+                <button type="submit" class="btn btn-confirm" data-amount="1000" data-currency="SGD" data-description="single room">
+                    Confirm Reservation
+                </button>
+            </div>
+
+        </div>
+    </div>
+    <footer class="section footer-section">
+        <div class="container">
+            <div class="row mb-4">
+                <div class="col-md-3 mb-5">
+                    <ul class="list-unstyled link">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Terms &amp; Conditions</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Rooms</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3 mb-5">
+                    <ul class="list-unstyled link">
+                        <li><a href="#">The Rooms &amp; Suites</a></li>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="#">Restaurant</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3 mb-5 pr-md-5 contact-info">
+                    <!-- <li>198 West 21th Street, <br> Suite 721 New York NY 10016</li> -->
+                    <p><span class="d-block"><span class="ion-ios-location h5 mr-3 text-primary"></span>Address:</span>
+                        <span> 198 West 21th Street, <br> Suite 721 New York NY 10016</span>
+                    </p>
+                    <p><span class="d-block"><span class="ion-ios-telephone h5 mr-3 text-primary"></span>Phone:</span>
+                        <span> (+1) 435 3533</span>
+                    </p>
+                    <p><span class="d-block"><span class="ion-ios-email h5 mr-3 text-primary"></span>Email:</span>
+                        <span> info@domain.com</span>
+                    </p>
+                </div>
+                <div class="col-md-3 mb-5">
+                    <p>Sign up for our newsletter</p>
+                    <form action="#" class="footer-newsletter">
+                        <div class="form-group">
+                            <input type="email" class="form-control" placeholder="Email...">
+                            <button type="submit" class="btn"><span class="fa fa-paper-plane"></span></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="row pt-5">
+                <p class="col-md-6 text-left">
+                    <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+                    Copyright &copy;
+                    <script>document.write(new Date().getFullYear());</script> All rights reserved | This template
+                    is
+                    made with <i class="icon-heart-o" aria-hidden="true"></i> by <a href="https://colorlib.com"
+                        target="_blank">Colorlib</a>
+                    <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+                </p>
+
+                <p class="col-md-6 text-right social">
+                    <a href="#"><span class="fa fa-tripadvisor"></span></a>
+                    <a href="#"><span class="fa fa-facebook"></span></a>
+                    <a href="#"><span class="fa fa-twitter"></span></a>
+                    <a href="#"><span class="fa fa-linkedin"></span></a>
+                    <a href="#"><span class="fa fa-vimeo"></span></a>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/jquery-3.3.1.min.js"></script>
+    <script src="js/jquery-migrate-3.0.1.min.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/owl.carousel.min.js"></script>
+    <script src="js/jquery.stellar.min.js"></script>
+    <script src="js/jquery.fancybox.min.js"></script>
+    <script src="js/aos.js"></script>
+    <script src="js/bootstrap-datepicker.js"></script>
+    <script src="js/jquery.timepicker.min.js"></script>
+
+    <script src="js/main.js"></script>
+    <script src="js/paymentsummary.js"></script>
+
+    <!-- <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const confirmButton = document.querySelector(".btn.btn-confirm");
+            const totalCostElement = document.getElementById("total-cost"); // Ensure this exists
+            const roomTypeElement = document.getElementById("room-type"); // Ensure this exists
+
+            if (confirmButton && totalCostElement && roomTypeElement) {
+                // Convert total cost to cents (e.g., $100 -> 10000 cents)
+                const totalCost = parseFloat(totalCostElement.textContent.replace(/[^\d.]/g, "")) * 100;
+                const roomType = roomTypeElement.textContent.trim();
+
+                // Set data attributes
+                confirmButton.setAttribute("data-amount", totalCost);
+                confirmButton.setAttribute("data-description", roomType);
+            }
+        });
+    </script> -->
+
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="js/payment.js"></script>
+</body>
+
+</html>
