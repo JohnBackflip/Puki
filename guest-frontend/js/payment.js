@@ -23,11 +23,14 @@ cardElement.mount("#card-element");
 
 document.querySelectorAll(".btn.btn-confirm").forEach(button => {
     button.addEventListener("click", async function () {
-        const amount = this.dataset.amount;
-        const currency = this.dataset.currency;
-        const description = this.dataset.description;
-        const checkInDate = this.dataset.checkin;  // Get check-in date from dataset
-        const checkOutDate = this.dataset.checkout; // Get check-out date from dataset
+        // Retrieve payment details from localStorage
+        const totalCost = localStorage.getItem("totalCost");
+        const roomType = localStorage.getItem("roomType");
+        const checkInDate = localStorage.getItem("checkInDate");  // Assuming check-in date is stored
+        const checkOutDate = localStorage.getItem("checkOutDate"); // Assuming check-out date is stored
+
+        // Calculate the amount in cents (Outsystems payment API expects the amount in cents)
+        const amount = parseFloat(totalCost) * 100;  // Convert total cost to cents
 
         try {
             const response = await fetch("https://personal-xnaxqorr.outsystemscloud.com/PaymentAPI/rest/PaymentAPI/PostPaymentIntents", {
@@ -37,8 +40,10 @@ document.querySelectorAll(".btn.btn-confirm").forEach(button => {
                 },
                 body: JSON.stringify({
                     amount: parseInt(amount),
-                    currency: currency,
-                    description: description,
+                    currency: "SGD", // Assuming the currency is Singapore Dollar
+                    description: roomType,
+                    checkInDate: checkInDate,
+                    checkOutDate: checkOutDate,
                 }),
             });
 

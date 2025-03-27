@@ -15,8 +15,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const nights = Math.max(1, Math.ceil(timeDiff / (1000 * 60 * 60 * 24))); // Ensure at least 1 night
     const totalCost = (parseFloat(roomPrice) * nights).toFixed(2);
 
+    // Store the relevant details in localStorage for later use in the payment process
+    localStorage.setItem("totalCost", totalCost);
+    localStorage.setItem("roomType", roomType);
+
     // Update the booking summary
-    document.getElementById("arrivalDate").textContent = checkInDate;
+    document.getElementById("arrivalDate").textContent = checkIn;
     document.getElementById("departureDate").textContent = checkOut;
     document.getElementById("guestCount").textContent = `${adults} Adults, ${children} Children`;
     document.getElementById("roomType").textContent = roomType; // Set room type
