@@ -1,0 +1,248 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Puki Hotel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <meta name="author" content="" />
+    <link rel="stylesheet" type="text/css"
+        href="//fonts.googleapis.com/css?family=|Roboto+Sans:400,700|Playfair+Display:400,700">
+
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/animate.css">
+    <link rel="stylesheet" href="css/owl.carousel.min.css">
+    <link rel="stylesheet" href="css/aos.css">
+    <link rel="stylesheet" href="css/bootstrap-datepicker.css">
+    <link rel="stylesheet" href="css/jquery.timepicker.css">
+    <link rel="stylesheet" href="css/fancybox.min.css">
+
+    <link rel="stylesheet" href="fonts/ionicons/css/ionicons.min.css">
+    <link rel="stylesheet" href="fonts/fontawesome/css/font-awesome.min.css">
+
+    <!-- Theme Style -->
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+
+        .guest-payment-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .guest-details,
+        .payment-details {
+            background-color: white;
+            padding: 50px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            font-size: 30px;
+            margin-bottom: 25px;
+            font-weight: bold;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+            font-size: 18px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+
+        .phone-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .phone-group select,
+        .phone-group input {
+            flex: 1;
+        }
+        .btn-next {
+            background-color: #f7c744;
+            color: #fff;
+            border: none;
+            border-radius: 25px;
+            padding: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            margin-top: 30px;
+            width: 20%;
+            float: right;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="site-header js-site-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-6 col-lg-4 site-logo" data-aos="fade"><a href="index.html">Puki Hotel</a></div>
+                <div class="col-6 col-lg-8">
+
+
+                    <div class="site-menu-toggle js-site-menu-toggle" data-aos="fade">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <!-- END menu-toggle -->
+
+                    <div class="site-navbar js-site-navbar">
+                        <nav role="navigation">
+                            <div class="container">
+                                <div class="row full-height align-items-center">
+                                    <div class="col-md-6 mx-auto">
+                                        <ul class="list-unstyled menu">
+                                            <li><a href="index.html">Home</a></li>
+                                            <li><a href="about.html">About</a></li>
+                                            <li><a href="events.html">Events</a></li>
+                                            <li class="active"><a href="contact.html">Contact</a></li>
+                                            <li><a href="checkin.html">Check-In / Check-Out</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- END head -->
+
+    <section class="site-hero inner-page overlay" style="background-image: url(images/hero_4.jpg)"
+        data-stellar-background-ratio="0.5">
+        <div class="container">
+            <div class="row site-hero-inner justify-content-center align-items-center">
+                <div class="col-md-10 text-center" data-aos="fade">
+                    <h1 class="heading mb-3">Check-In / Check-Out</h1>
+                    <h5 style="color:white">Please fill in your booking details before proceeding</h5>
+                </div>
+            </div>
+        </div>
+
+        <a class="mouse smoothscroll" href="#next">
+            <div class="mouse-icon">
+                <span class="mouse-wheel"></span>
+            </div>
+        </a>
+    </section>
+    <!-- END section -->
+
+    <div class="container"
+        style="display: flex; justify-content: space-between; gap: 30px; padding: 40px; max-width: 1100px; margin: auto;">
+        <!-- Guest & Payment Details Section (Left) -->
+        <div class="guest-payment-container">
+
+            <!-- Guest Details -->
+            <div class="guest-details">
+                <h2>Booking Details</h2>
+                <form id="guestForm">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" name="fullName" required>
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email">
+                    <label for="bookingID">Booking ID</label>
+                    <input type="text" id="bookingID" name="bookingID">
+                        <button type="submit" class="btn btn-next">Next</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer class="section footer-section py-5">
+        <div class="container">
+            <div class="row mb-4">
+                <div class="col-md-3 mb-5">
+                    <ul class="list-unstyled link">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Terms &amp; Conditions</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3 mb-5">
+                    <ul class="list-unstyled link">
+                        <li><a href="#">Rooms</a></li>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3 mb-5 pr-md-5 contact-info">
+                    <p><span class="d-block"><span class="ion-ios-location h5 mr-3 text-primary"></span>Address:</span>
+                        <span> 304 Orchard Road, Singapore 536203</span>
+                    </p>
+                    <p><span class="d-block"><span class="ion-ios-telephone h5 mr-3 text-primary"></span>Phone:</span>
+                        <span> (+65) 6738 3274</span>
+                    </p>
+                    <p><span class="d-block"><span class="ion-ios-email h5 mr-3 text-primary"></span>Email:</span>
+                        <span> inquiries@pukihotel.com</span>
+                    </p>
+                </div>
+                <div class="col-md-3 mb-5">
+                    <p>Sign up for our newsletter</p>
+                    <form action="#" class="footer-newsletter">
+                        <div class="form-group">
+                            <input type="email" class="form-control" placeholder="Email...">
+                            <button type="submit" class="btn"><span class="fa fa-paper-plane"></span></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="row pt-5">
+                <p class="col-md-6 text-left">
+                    Copyright &copy;
+                    <script>document.write(new Date().getFullYear());</script> All rights reserved | This template
+                    is made with <i class="icon-heart-o" aria-hidden="true"></i> by Colorlib
+                </p>
+
+                <p class="col-md-6 text-right social">
+                    <a href="#"><span class="fa fa-tripadvisor"></span></a>
+                    <a href="#"><span class="fa fa-facebook"></span></a>
+                    <a href="#"><span class="fa fa-twitter"></span></a>
+                    <a href="#"><span class="fa fa-linkedin"></span></a>
+                    <a href="#"><span class="fa fa-vimeo"></span></a>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/jquery-3.3.1.min.js"></script>
+    <script src="js/jquery-migrate-3.0.1.min.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/owl.carousel.min.js"></script>
+    <script src="js/jquery.stellar.min.js"></script>
+    <script src="js/jquery.fancybox.min.js"></script>
+    <script src="js/aos.js"></script>
+    <script src="js/bootstrap-datepicker.js"></script>
+    <script src="js/jquery.timepicker.min.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>
