@@ -26,73 +26,65 @@
     <!-- Theme Style -->
     <link rel="stylesheet" href="css/style.css">
     <style>
-        /* Styling for room layout */
-        .room-card {
+        .payment-confirmation {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Header Section */
+        .status {
             display: flex;
             align-items: center;
-            border: 1px solid #ddd;
-            border-radius: 8px;
             margin-bottom: 20px;
-            padding: 15px;
-            background-color: #fff;
         }
 
-        .room-card img {
-            width: 40%;
-            border-radius: 8px;
+        .status .icon {
+            color: green;
+            font-size: 28px;
+            margin-right: 10px;
         }
 
-        .room-card .room-info {
-            padding-left: 20px;
-        }
-
-        .room-card h3 {
-            margin-top: 0;
-        }
-
-        .room-card p {
-            margin-bottom: 10px;
-        }
-
-        .btn-show-rates {
-            background-color: #f7c744;
-            color: #fff;
-            border-radius: 25px;
-            padding: 10px 20px;
-            text-transform: uppercase;
+        .status h2 {
+            font-size: 25px;
+            color: #333;
+            margin: 0;
             font-weight: bold;
         }
-
-        /* Styling for horizontal layout */
-        #booking-details {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        #booking-details .details-container {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-
-        #booking-details .details-container p {
-            margin: 0;
+        .booking-summary p {
+            margin-top: 10px;
             font-size: 16px;
         }
+        .details {
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+        }
+        .details div {
+            text-align: left;
+        }
 
-        #booking-details .modify-link {
-            color: #007bff;
-            text-decoration: none;
+        .details div p {
+            margin: 5px 0;
+        }
+
+        .details div strong {
             font-weight: bold;
         }
-
-        #booking-details .modify-link:hover {
-            text-decoration: underline;
+        .details-bottom {
+            justify-content: space-between;
+            padding: 10px 0;
         }
+        .details-bottom {
+            margin: 5px 0;
+        }
+        .details-bottom p strong {
+            font-weight: bold;
+        }
+        
     </style>
 </head>
 
@@ -137,71 +129,52 @@
         </div>
     </header>
     <!-- END head -->
+    <!-- Booking Information Section -->
     <section class="section bg-light py-5 text-center">
-        <h2 style="font-weight: bold; font-size: 28px;">Select a Room</h2>
-        <p>Choose from our luxurious rooms for your stay at Puki Hotel.</p>
+        <h2 style="font-weight: bold; font-size: 28px;">Booking Confirmation</h2>
+        <p>Thank you for Choosing your stay at Puki Hotel. Please check your email for the booking confirmation.</p>
     </section>
-    
-    <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
-        <!-- Left Section -->
-        <div class="details-left mt-5">
-            <div class="guests">
-                <i class="fa fa-user"></i> <span id="guests"></span>
-            </div>
-            <div class="dates" id="dates"></div>
+    <section>
+    <div class="container payment-confirmation" style="justify-content: center; padding: 40px; max-width: 1100px; margin-top: 50px; margin-bottom: 50px;">
+        <div class="status">
+            <span class="icon">✔</span>
+            <h2>Booking Confirmed</h2>
         </div>
-        <a href="index.html" class="modify-link">Modify</a>
+        <p>We are pleased to inform you that your booking has been received and confirmed. We look forward to seeing you soon!</p>
+        <div class="booking-summary">
+            <h2 style="margin-top: 30px; margin-bottom: 20px;  font-size: 25px; font-weight: bold;">Booking Details</h2>
+
+            <div class="details">
+                <div>
+                    <p>Booking:</p>
+                    <p><strong>1011</strong></p>
+                </div>
+                <div>
+                    <p>Check-in:</p>
+                    <p><strong>September 26, 2019</strong></p>
+                </div>
+                <div>
+                    <p>Check-out:</p>
+                    <p><strong>September 27, 2019</strong></p>
+                </div>
+                <div>
+                    <p>Total:</p>
+                    <p><strong>$129</strong></p>
+                </div>
+                <div>
+                    <p>Status:</p>
+                    <p><strong>Confirmed</strong></p>
+                </div>
+            </div>
+            <div class="details-bottom">
+            <p><strong>Address:</strong> 304 Orchard Road, Singapore 536203</p>
+            <p><strong>Contact Number:</strong> +65 6738 3274</p>
+            <p><strong>Email:</strong> inquiries@pukihotel.com</p>
+            </div>
+        </div>
     </div>
-    
-    <section class="section bg-white py-5">
-        <div class="container">
-        
-            <!-- Room Details -->
-            <!-- Room 1 -->
-            <div class="room-card" data-aos="fade-up">
-                <img src="images/img_1.jpg" alt="Single Room" class="img-fluid">
-                <div class="room-info">
-                    <h3>Single Room</h3>
-                    <p>Perfect for solo travelers, equipped with modern amenities.</p>
-                    <p><strong>$90 / Night</strong></p>
-                    <button id="bookNowButton" class="btn btn-show-rates" 
-                            data-amount="1000" 
-                            data-currency="USD" 
-                            data-description="Single Room Booking">Book Now</button>
-                </div>
-            </div>
-        
-            <!-- Room 2 -->
-            <div class="room-card" data-aos="fade-up" data-aos-delay="100">
-                <img src="images/img_2.jpg" alt="Family Room" class="img-fluid">
-                <div class="room-info">
-                    <h3>Family Room</h3>
-                    <p>Spacious room ideal for families with children.</p>
-                    <p><strong>$120 / Night</strong></p>
-                    <button id="bookNowButton" class="btn btn-show-rates" 
-                            data-amount="12000" 
-                            data-currency="USD" 
-                            data-description="Family Room Booking">Book Now</button>
-                </div>
-            </div>
-        
-            <!-- Room 3 -->
-            <div class="room-card" data-aos="fade-up" data-aos-delay="200">
-                <img src="images/img_3.jpg" alt="Presidential Suite" class="img-fluid">
-                <div class="room-info">
-                    <h3>Presidential Suite</h3>
-                    <p>A luxurious suite with premium amenities and services.</p>
-                    <p><strong>$250 / Night</strong></p>
-                    <button id="bookNowButton" class="btn btn-show-rates" 
-                            data-amount="25000" 
-                            data-currency="USD" 
-                            data-description="Presidential Suite Booking">Book Now</button>
-                </div>
-            </div>
-        
-        </div>
-    </section>
-    
+</section>
+
     <footer class="section footer-section py-5">
         <div class="container">
             <div class="row mb-4">
@@ -257,7 +230,7 @@
             </div>
         </div>
     </footer>
-    
+
     <script src="js/jquery-3.3.1.min.js"></script>
     <script src="js/jquery-migrate-3.0.1.min.js"></script>
     <script src="js/popper.min.js"></script>
@@ -268,9 +241,11 @@
     <script src="js/aos.js"></script>
     <script src="js/bootstrap-datepicker.js"></script>
     <script src="js/jquery.timepicker.min.js"></script>
-    <!-- <script src="https://js.stripe.com/v3/"></script> -->
+
     <script src="js/main.js"></script>
-    <!-- <script src="js/payment.js"></script> -->
+    <script src="js/paymentsummary.js"></script>
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="js/payment.js"></script>
 </body>
 
 </html>
