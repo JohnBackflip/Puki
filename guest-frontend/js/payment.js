@@ -19,23 +19,24 @@ const style = {
 };
 
 const cardElement = elements.create("card", { style });
-cardElement.mount("#card-element"); // Create a div with id="card-element" in your HTML for this to render
+cardElement.mount("#card-element");
 
 document.querySelectorAll(".btn.btn-confirm").forEach(button => {
     button.addEventListener("click", async function () {
         const amount = this.dataset.amount;
         const currency = this.dataset.currency;
         const description = this.dataset.description;
+        const checkInDate = this.dataset.checkin;  // Get check-in date from dataset
+        const checkOutDate = this.dataset.checkout; // Get check-out date from dataset
 
         try {
-            // Call OutSystems API to create PaymentIntent
             const response = await fetch("https://personal-xnaxqorr.outsystemscloud.com/PaymentAPI/rest/PaymentAPI/PostPaymentIntents", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    amount: parseInt(amount), // Amount in cents
+                    amount: parseInt(amount),
                     currency: currency,
                     description: description,
                 }),
@@ -44,21 +45,14 @@ document.querySelectorAll(".btn.btn-confirm").forEach(button => {
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error(`API returned status ${response.status}. Response: ${errorText}`);
-                const result = JSON.parse(errorText);
-                if (result && result.Errors) {
-                    alert(`An error occurred: ${result.Errors[0]}`);
-                } else {
-                    alert(`An error occurred: ${errorText}`);
-                }
+                alert(`An error occurred: ${errorText}`);
                 throw new Error(`API returned status ${response.status}. Response: ${errorText}`);
             }
 
             const result = await response.json();
             console.log("API Response:", result);
-            console.log("API client:", result.client_secret);
 
             if (result && result.client_secret) {
-                // Confirm the payment with Stripe Elements
                 const { paymentIntent, error } = await stripe.confirmCardPayment(result.client_secret, {
                     payment_method: {
                         card: cardElement,
@@ -74,9 +68,27 @@ document.querySelectorAll(".btn.btn-confirm").forEach(button => {
                     alert(`Payment failed: ${error.message}`);
                 } else {
                     if (paymentIntent.status === 'succeeded') {
-                        alert("Payment Successful")
-                        console.log("Payment successful:", paymentIntent);
-                        // Handle successful payment here (e.g., display a success message, update booking status)
+                        console.log("Redirecting to bookingconfirmation.html...");
+                        alert("Payment Successful");
+
+                         // Generate a random 3-digit customer ID
+                         const customerId = Math.floor(100 + Math.random() * 900); // Random 3-digit number
+
+                         // Generate a random 5-digit booking ID
+                         const bookingId = Math.floor(10000 + Math.random() * 90000);
+ 
+                         // Store booking details in localStorage
+                         const bookingDetails = {
+                             bookingId,
+                             customerId,  // Store the customer ID
+                             checkInDate,
+                             checkOutDate,
+                             totalCost: (amount / 100).toFixed(2), // Convert cents to dollars
+                         };
+                         localStorage.setItem("bookingDetails", JSON.stringify(bookingDetails));
+ 
+                         // Redirect to confirmation page
+                         window.location.href = "bookingconfirmation.html";
                     }
                 }
             } else {

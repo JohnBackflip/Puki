@@ -52,17 +52,19 @@
             margin: 0;
             font-weight: bold;
         }
+
         .booking-summary p {
             margin-top: 10px;
             font-size: 16px;
         }
+
         .details {
             display: flex;
             justify-content: space-between;
             border-top: 1px solid #ddd;
-            border-bottom: 1px solid #ddd;
             padding: 10px 0;
         }
+
         .details div {
             text-align: left;
         }
@@ -74,17 +76,19 @@
         .details div strong {
             font-weight: bold;
         }
+
         .details-bottom {
             justify-content: space-between;
             padding: 10px 0;
         }
+
         .details-bottom {
             margin: 5px 0;
         }
+
         .details-bottom p strong {
             font-weight: bold;
         }
-        
     </style>
 </head>
 
@@ -132,48 +136,46 @@
     <!-- Booking Information Section -->
     <section class="section bg-light py-5 text-center">
         <h2 style="font-weight: bold; font-size: 28px;">Booking Confirmation</h2>
-        <p>Thank you for Choosing your stay at Puki Hotel. Please check your email for the booking confirmation.</p>
+        <p>Thank you for choosing your stay at Puki Hotel. Please check your email for the booking confirmation.</p>
     </section>
     <section>
-    <div class="container payment-confirmation" style="justify-content: center; padding: 40px; max-width: 1100px; margin-top: 50px; margin-bottom: 50px;">
-        <div class="status">
-            <span class="icon">✔</span>
-            <h2>Booking Confirmed</h2>
-        </div>
-        <p>We are pleased to inform you that your booking has been received and confirmed. We look forward to seeing you soon!</p>
-        <div class="booking-summary">
-            <h2 style="margin-top: 30px; margin-bottom: 20px;  font-size: 25px; font-weight: bold;">Booking Details</h2>
+        <div class="container payment-confirmation"
+            style="justify-content: center; padding: 40px; max-width: 1100px; margin-top: 50px; margin-bottom: 50px;">
+            <div class="status">
+                <span class="icon">✔</span>
+                <h2>Booking Confirmed</h2>
+            </div>
+            <p>We are pleased to inform you that your booking has been received and confirmed. We look forward to seeing
+                you soon!</p>
+            <div class="booking-summary">
+                <h2 style="margin-top: 30px; margin-bottom: 20px;  font-size: 25px; font-weight: bold;">Booking Details
+                </h2>
 
-            <div class="details">
-                <div>
-                    <p>Booking:</p>
-                    <p><strong>1011</strong></p>
+                <div class="details">
+                    <div>
+                        <p>Booking ID:</p>
+                        <p><strong id="bookingId">-</strong></p>
+                    </div>
+                    <div>
+                        <p>Check-in Date:</p>
+                        <p><strong id="checkInDate">-</strong></p>
+                    </div>
+                    <div>
+                        <p>Check-out Date:</p>
+                        <p><strong id="checkOutDate">-</strong></p>
+                    </div>
+                    <div>
+                        <p>Price:</p>
+                        <p><strong id="totalCost">-</strong></p>
+                    </div>
+                    <div>
+                        <p>Status:</p>
+                        <p><strong>Confirmed</strong></p>
+                    </div>
                 </div>
-                <div>
-                    <p>Check-in:</p>
-                    <p><strong>September 26, 2019</strong></p>
-                </div>
-                <div>
-                    <p>Check-out:</p>
-                    <p><strong>September 27, 2019</strong></p>
-                </div>
-                <div>
-                    <p>Total:</p>
-                    <p><strong>$129</strong></p>
-                </div>
-                <div>
-                    <p>Status:</p>
-                    <p><strong>Confirmed</strong></p>
-                </div>
-            </div>
-            <div class="details-bottom">
-            <p><strong>Address:</strong> 304 Orchard Road, Singapore 536203</p>
-            <p><strong>Contact Number:</strong> +65 6738 3274</p>
-            <p><strong>Email:</strong> inquiries@pukihotel.com</p>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
     <footer class="section footer-section py-5">
         <div class="container">
@@ -219,7 +221,7 @@
                     <script>document.write(new Date().getFullYear());</script> All rights reserved | This template
                     is made with <i class="icon-heart-o" aria-hidden="true"></i> by Colorlib
                 </p>
-    
+
                 <p class="col-md-6 text-right social">
                     <a href="#"><span class="fa fa-tripadvisor"></span></a>
                     <a href="#"><span class="fa fa-facebook"></span></a>
@@ -246,6 +248,29 @@
     <script src="js/paymentsummary.js"></script>
     <script src="https://js.stripe.com/v3/"></script>
     <script src="js/payment.js"></script>
+    <script>
+        // bookingconfirmation.html script
+        document.addEventListener("DOMContentLoaded", function () {
+            // Retrieve the booking details from localStorage
+            const bookingDetails = JSON.parse(localStorage.getItem("bookingDetails"));
+
+            if (bookingDetails) {
+                // Retrieve the check-in and check-out dates from localStorage
+                const checkInDate = localStorage.getItem("checkInDate");
+                const checkOutDate = localStorage.getItem("checkOutDate");
+
+                // Populate the confirmation page with booking details
+                document.getElementById("bookingId").textContent = `${bookingDetails.bookingId}`;
+                document.getElementById("checkInDate").textContent = `${checkInDate || "Not specified"}`;
+                document.getElementById("checkOutDate").textContent = `${checkOutDate || "Not specified"}`;
+                document.getElementById("totalCost").textContent = `$${bookingDetails.totalCost}`;
+            } else {
+                console.warn("No booking details found.");
+            }
+        });
+
+    </script>
+
 </body>
 
 </html>

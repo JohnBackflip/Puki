@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const totalCost = (parseFloat(roomPrice) * nights).toFixed(2);
 
     // Update the booking summary
-    document.getElementById("arrivalDate").textContent = checkIn;
+    document.getElementById("arrivalDate").textContent = checkInDate;
     document.getElementById("departureDate").textContent = checkOut;
     document.getElementById("guestCount").textContent = `${adults} Adults, ${children} Children`;
     document.getElementById("roomType").textContent = roomType; // Set room type
