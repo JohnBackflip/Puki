@@ -134,13 +134,13 @@
     </header>
     <!-- END head -->
     <!-- Booking Information Section -->
-    <section class="section bg-light py-5 text-center">
+    <section class="section bg-light py-5 text-center" data-aos="fade-up" data-aos-delay="100">
         <h2 style="font-weight: bold; font-size: 28px;">Booking Confirmation</h2>
         <p>Thank you for choosing your stay at Puki Hotel. Please check your email for the booking confirmation.</p>
     </section>
     <section>
         <div class="container payment-confirmation"
-            style="justify-content: center; padding: 40px; max-width: 1300px; margin-top: 50px; margin-bottom: 50px;">
+            style="justify-content: center; padding: 40px; max-width: 1300px; margin-top: 50px; margin-bottom: 50px;" data-aos="fade-up" data-aos-delay="100">
             <div class="status">
                 <span class="icon">✔</span>
                 <h2>Booking Confirmed</h2>
@@ -165,12 +165,30 @@
                         <p><strong id="checkOutDate">-</strong></p>
                     </div>
                     <div>
+                        <p>Room:</p>
+                        <p><strong id="roomType">-</strong></p>
+                    </div>
+                    <div>
                         <p>Price:</p>
                         <p><strong id="totalCost">-</strong></p>
                     </div>
                     <div>
                         <p>Status:</p>
                         <p><strong>Confirmed</strong></p>
+                    </div>
+                </div><h2 style="margin-top: 30px; margin-bottom: 20px;  font-size: 25px; font-weight: bold;">Guest Details</h2>
+                <div class="details">
+                    <div>
+                        <p>Name:</p>
+                        <p><strong id="fullName">-</strong></p>
+                    </div>
+                    <div>
+                        <p>Email:</p>
+                        <p><strong id="email">-</strong></p>
+                    </div>
+                    <div>
+                        <p>Phone:</p>
+                        <p><strong id="phoneNumber">-</strong></p>
                     </div>
                 </div>
             </div>
@@ -258,12 +276,20 @@
                 // Retrieve the check-in and check-out dates from localStorage
                 const checkInDate = localStorage.getItem("checkInDate");
                 const checkOutDate = localStorage.getItem("checkOutDate");
+                const roomType = localStorage.getItem("roomType");
+                const fullName = localStorage.getItem("fullName") || "Not provided";
+                const guestEmail = localStorage.getItem("email") || "Not provided";  // Must match `paymentsummary.js`
+                const guestPhone = localStorage.getItem("phoneNumber") || "Not provided";
 
                 // Populate the confirmation page with booking details
                 document.getElementById("bookingId").textContent = `${bookingDetails.bookingId}`;
                 document.getElementById("checkInDate").textContent = `${checkInDate || "Not specified"}`;
                 document.getElementById("checkOutDate").textContent = `${checkOutDate || "Not specified"}`;
+                document.getElementById("roomType").textContent = `${roomType || "Not specified"}`;
                 document.getElementById("totalCost").textContent = `$${bookingDetails.totalCost}`;
+                document.getElementById("email").textContent = bookingDetails.email || "Not specified";
+                document.getElementById("phoneNumber").textContent = bookingDetails.phoneNumber || "Not specified";
+                document.getElementById("fullName").textContent = bookingDetails.fullName || "Guest";
             } else {
                 console.warn("No booking details found.");
             }

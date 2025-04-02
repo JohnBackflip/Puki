@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
     // Retrieve stored booking details
-    const roomType = localStorage.getItem("roomType") || "State Room Suite King"; // Default room type
+    const roomType = localStorage.getItem("roomType") || "State Room Suite King";
     const checkIn = localStorage.getItem("checkInDate") || "Not specified";
     const checkOut = localStorage.getItem("checkOutDate") || "Not specified";
     const adults = localStorage.getItem("adults") || "0";
@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("arrivalDate").textContent = checkIn;
     document.getElementById("departureDate").textContent = checkOut;
     document.getElementById("guestCount").textContent = `${adults} Adults, ${children} Children`;
-    document.getElementById("roomType").textContent = roomType; // Set room type
+    document.getElementById("roomType").textContent = roomType;
     document.getElementById("totalCost").textContent = totalCost;
     document.getElementById("nights").textContent = nights;
 

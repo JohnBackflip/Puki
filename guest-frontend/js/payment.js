@@ -1,4 +1,4 @@
-const stripe = Stripe('pk_test_51QAsReGgLeDXJUjvDrRwiHI6nisUuA7gSQw3AlX2UBqzlc4vPhbGCQCjcNiDel8pBfks9UhZGZXlO0jkvuNx1roP00zHKPl3aR'); // Replace with your Stripe publishable key
+const stripe = Stripe("pk_test_51QAsReGgLeDXJUjvDrRwiHI6nisUuA7gSQw3AlX2UBqzlc4vPhbGCQCjcNiDel8pBfks9UhZGZXlO0jkvuNx1roP00zHKPl3aR"); // Replace with your Stripe publishable key
 const elements = stripe.elements();
 
 const style = {
@@ -23,14 +23,27 @@ cardElement.mount("#card-element");
 
 document.querySelectorAll(".btn.btn-confirm").forEach(button => {
     button.addEventListener("click", async function () {
-        // Retrieve payment details from localStorage
+        
+        // Retrieve guest details from the form
+        const fullName = document.getElementById("fullName")?.value.trim() || "";
+        const email = document.getElementById("email")?.value.trim() || "";
+        const countryCode = document.getElementById("countryCode")?.value.trim() || "";
+        const localNumber = document.getElementById("localNumber")?.value.trim() || "";
+        const phoneNumber = countryCode && localNumber ? `${countryCode} ${localNumber}` : "";
+
+        // Save guest details to localStorage
+        localStorage.setItem("fullName", fullName);
+        localStorage.setItem("email", email);
+        localStorage.setItem("phoneNumber", phoneNumber);
+
+        // Retrieve other details needed for payment from localStorage
         const totalCost = localStorage.getItem("totalCost");
         const roomType = localStorage.getItem("roomType");
-        const checkInDate = localStorage.getItem("checkInDate");  // Assuming check-in date is stored
-        const checkOutDate = localStorage.getItem("checkOutDate"); // Assuming check-out date is stored
+        const checkInDate = localStorage.getItem("checkInDate");
+        const checkOutDate = localStorage.getItem("checkOutDate");
 
-        // Calculate the amount in cents (Outsystems payment API expects the amount in cents)
-        const amount = parseFloat(totalCost) * 100;  // Convert total cost to cents
+        // Calculate the amount in cents
+        const amount = parseFloat(totalCost) * 100;
 
         try {
             const response = await fetch("https://personal-xnaxqorr.outsystemscloud.com/PaymentAPI/rest/PaymentAPI/PostPaymentIntents", {
@@ -40,10 +53,10 @@ document.querySelectorAll(".btn.btn-confirm").forEach(button => {
                 },
                 body: JSON.stringify({
                     amount: parseInt(amount),
-                    currency: "SGD", // Assuming the currency is Singapore Dollar
+                    currency: "SGD",
                     description: roomType,
-                    checkInDate: checkInDate,
-                    checkOutDate: checkOutDate,
+                    checkInDate,
+                    checkOutDate,
                 }),
             });
 
@@ -62,8 +75,8 @@ document.querySelectorAll(".btn.btn-confirm").forEach(button => {
                     payment_method: {
                         card: cardElement,
                         billing_details: {
-                            name: document.querySelector("#cardName").value,
-                            email: document.querySelector("#email").value,
+                            name: fullName,
+                            email: email,
                         },
                     },
                 });
@@ -74,26 +87,29 @@ document.querySelectorAll(".btn.btn-confirm").forEach(button => {
                 } else {
                     if (paymentIntent.status === 'succeeded') {
                         console.log("Redirecting to bookingconfirmation.html...");
-                        alert("Payment Successful");
 
-                         // Generate a random 3-digit customer ID
-                         const customerId = Math.floor(100 + Math.random() * 900); // Random 3-digit number
+                        // Generate a random 3-digit customer ID
+                        const customerId = Math.floor(100 + Math.random() * 900);
 
-                         // Generate a random 5-digit booking ID
-                         const bookingId = Math.floor(10000 + Math.random() * 90000);
- 
-                         // Store booking details in localStorage
-                         const bookingDetails = {
-                             bookingId,
-                             customerId,  // Store the customer ID
-                             checkInDate,
-                             checkOutDate,
-                             totalCost: (amount / 100).toFixed(2), // Convert cents to dollars
-                         };
-                         localStorage.setItem("bookingDetails", JSON.stringify(bookingDetails));
- 
-                         // Redirect to confirmation page
-                         window.location.href = "bookingconfirmation.html";
+                        // Generate a random 5-digit booking ID
+                        const bookingId = Math.floor(10000 + Math.random() * 90000);
+
+                        // Store booking details in localStorage
+                        const bookingDetails = {
+                            bookingId,
+                            customerId,
+                            checkInDate,
+                            checkOutDate,
+                            roomType,
+                            fullName: localStorage.getItem("fullName") || "Not provided",
+                            email: localStorage.getItem("email") || "Not provided",
+                            phoneNumber: localStorage.getItem("phoneNumber") || "Not provided",
+                            totalCost: (amount / 100).toFixed(2),
+                        };
+                        localStorage.setItem("bookingDetails", JSON.stringify(bookingDetails));
+
+                        // Redirect to confirmation page
+                        window.location.href = "bookingconfirmation.html";
                     }
                 }
             } else {
