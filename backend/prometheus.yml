@@ -1,0 +1,48 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'auth_service'
+    static_configs:
+      - targets: ['auth_service:8000']
+
+  - job_name: 'guest_service'
+    static_configs:
+      - targets: ['guest_service:8000']
+
+  - job_name: 'booking_service'
+    static_configs:
+      - targets: ['booking_service:8000']
+
+  - job_name: 'security_service'
+    static_configs:
+      - targets: ['security_service:8000']
+
+  - job_name: 'price_service'
+    static_configs:
+      - targets: ['price_service:8000']
+
+  - job_name: 'roster_service'
+    static_configs:
+      - targets: ['roster_service:8000']
+
+  - job_name: 'notification_service'
+    static_configs:
+      - targets: ['notification_service:8000']
+
+  - job_name: 'payment_service'
+    static_configs:
+      - targets: ['payment_service:8000']
+
+  - job_name: 'housekeeping_service'
+    static_configs:
+      - targets: ['housekeeping_service:8000']
+
+  - job_name: 'room_service'
+    static_configs:
+      - targets: ['room_service:8000']
+
+  - job_name: 'kong'
+    static_configs:
+      - targets: ['kong:8001'] 
