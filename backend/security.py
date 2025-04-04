@@ -9,15 +9,11 @@ from os import environ
 app = Flask(__name__)
 CORS(app)
 
-
-app.config["SQLALCHEMY_DATABASE_URI"] = (
-    environ.get("dbURL") or "mysql+mysqlconnector://root@localhost:3306/puki"
-)
+# Database Configuration
+app.config["SQLALCHEMY_DATABASE_URI"] = environ.get("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_recycle": 299}
 
 db = SQLAlchemy(app)
-
 
 #keycard model
 class Keycard(db.Model):
@@ -25,8 +21,7 @@ class Keycard(db.Model):
 
     keycard_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     booking_id = db.Column(db.Integer, nullable=False, unique=True)  # Links to a booking
-    user_id = db.Column(db.Integer, nullable=True)  # Staff who issued the key (None for self check-in)
-    customer_id = db.Column(db.Integer, nullable=False)  # Customer using the key
+    guest_id = db.Column(db.Integer, nullable=False)  # Customer using the key
     room_id = db.Column(db.String(36), nullable=False)
     key_pin = db.Column(db.String(6), nullable=False)  # 6-digit PIN
     issued_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -36,20 +31,27 @@ class Keycard(db.Model):
         return {
             "keycard_id": self.keycard_id,
             "booking_id": self.booking_id,
-            "user_id": self.user_id, 
-            "customer_id": self.customer_id,
+            "guest_id": self.guest_id,
             "room_id": self.room_id,
-            "key_pin": self.key_pin,
+            "key_pin": self.generate_pin(),
             "issued_at": str(self.issued_at),
             "expires_at": str(self.expires_at) if self.expires_at else None
         }
 
+# generate pin
+def generate_pin():
+    return ''.join(random.choices(string.digits, k=6))
 
 # auto-create table if not ald
 with app.app_context():
     db.create_all()
 
+#health check
+@app.route("/health")
+def health():
+    return {"status": "healthy"}
 
+# generate keycard
 @app.route("/keycards", methods=["POST"])
 def generate_keycard():
     data = request.get_json()
@@ -60,7 +62,7 @@ def generate_keycard():
     if existing_keycard:
         return jsonify({"code": 400, "message": "Keycard already exists for this booking."}), 400
 
-    #gets check-out date
+    # gets check-out date
     booking_url = f"http://localhost:5002/bookings/{data['booking_id']}"
     booking_response = requests.get(booking_url)
 
@@ -68,7 +70,7 @@ def generate_keycard():
         return jsonify({"code": 400, "message": "Invalid booking ID."}), 400
 
     booking_data = booking_response.json()["data"]
-    check_out_date = booking_data["check_out_date"]  # Format: YYYY-MM-DD
+    check_out_date = booking_data["check_out_date"]  # ✅ Format: YYYY-MM-DD
 
     # convert to `expires_at` (Check-Out Date at 3 PM)
     expires_at = datetime.strptime(check_out_date, "%Y-%m-%d") + timedelta(hours=15)  # 3 PM
@@ -76,8 +78,7 @@ def generate_keycard():
     # allow "user_id" to be None if not provided (Self Check-In)
     new_keycard = Keycard(
         booking_id=data["booking_id"],
-        user_id=data.get("user_id"),  
-        customer_id=data["customer_id"],
+        guest_id=data["customer_id"],  # Updated to match the model
         room_id=data["room_id"],
         key_pin=str(random.randint(000000, 999999)).zfill(6),  
         expires_at=expires_at 
@@ -117,7 +118,6 @@ def renew_keycard(booking_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"code": 500, "message": f"Error renewing keycard: {str(e)}"}), 500
-
 
 # expire keycard (when user checks out)
 @app.route("/keycards/<int:booking_id>/expire", methods=["PUT"])

@@ -1,48 +1,65 @@
+# my global config
 global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
+  scrape_interval: 15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
 
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
 scrape_configs:
-  - job_name: 'auth_service'
-    static_configs:
-      - targets: ['auth_service:8000']
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: "prometheus"
 
-  - job_name: 'guest_service'
-    static_configs:
-      - targets: ['guest_service:8000']
+    # metrics_path defaults to '/metrics'
+    # scheme defaults to 'http'.
 
-  - job_name: 'booking_service'
     static_configs:
-      - targets: ['booking_service:8000']
+      - targets: ["localhost:9090"]
 
-  - job_name: 'security_service'
+  - job_name: "kong"
     static_configs:
-      - targets: ['security_service:8000']
+      - targets: ["kong:8001"]
+
+  - job_name: 'guest'
+    static_configs:
+      - targets: ['guest:8000']
+
+  - job_name: 'booking'
+    static_configs:
+      - targets: ['booking:8000']
+
+  - job_name: 'security'
+    static_configs:
+      - targets: ['security:8000']
 
   - job_name: 'price_service'
     static_configs:
       - targets: ['price_service:8000']
 
-  - job_name: 'roster_service'
+  - job_name: 'roster'
     static_configs:
-      - targets: ['roster_service:8000']
+      - targets: ['roster:8000']
 
-  - job_name: 'notification_service'
+  - job_name: 'notification'
     static_configs:
-      - targets: ['notification_service:8000']
+      - targets: ['notification:8000']
 
-  - job_name: 'payment_service'
+  - job_name: 'housekeeping'
     static_configs:
-      - targets: ['payment_service:8000']
-
-  - job_name: 'housekeeping_service'
-    static_configs:
-      - targets: ['housekeeping_service:8000']
+      - targets: ['housekeeping:8000']
 
   - job_name: 'room_service'
     static_configs:
       - targets: ['room_service:8000']
-
-  - job_name: 'kong'
-    static_configs:
-      - targets: ['kong:8001'] 

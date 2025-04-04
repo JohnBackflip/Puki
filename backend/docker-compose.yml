@@ -1,268 +1,298 @@
+volumes:
+  mysql_data:
+    name: puki_mysql_data
+  rabbitmq_data:
+    name: esd_rabbitmq_data
+  grafana_data:
+    name: puki_grafana_data
+  pgdata:
+    name: kong_pgdata
+
+networks:
+  puki-network:
+    driver: bridge
+    name: puki-network
 services:
-  mysql:
-    image: mysql:5.7
-    container_name: mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: hotel
-      MYSQL_USER: is213
-      MYSQL_PASSWORD: 
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-  booking_service:
-    build:
-      context: ./
-      dockerfile: Dockerfile
-    image: hotel/booking_service:1.0
-    container_name: booking_service
-    depends_on:
-      - mysql
-    ports:
-      - "5002:5002"
-    environment:
-      - dbURL=mysql+mysqlconnector://is213@host.docker.internal:3306/hotel
-
-  checkin_service:
-    build:
-      context: ./
-      dockerfile: Dockerfile
-    image: hotel/checkin_service:1.0
-    container_name: checkin_service
-    depends_on:
-      - mysql
-    ports:
-      - "5003:5003"
-    environment:
-      - dbURL=mysql+mysqlconnector://is213@host.docker.internal:3306/hotel
-
-  checkout_service:
-    build:
-      context: ./
-      dockerfile: Dockerfile
-    image: hotel/checkout_service:1.0
-    container_name: checkout_service
-    depends_on:
-      - mysql
-      - rabbitmq
-    ports:
-      - "5004:5004"
-    environment:
-      - dbURL=mysql+mysqlconnector://is213@host.docker.internal:3306/hotel
-
-  customer_service:
-    build:
-      context: ./
-      dockerfile: Dockerfile
-    image: hotel/customer_service:1.0
-    container_name: customer_service
-    depends_on:
-      - mysql
-    ports:
-      - "5005:5005"
-    environment:
-      - dbURL=mysql+mysqlconnector://is213@host.docker.internal:3306/hotel
-
-  housekeeping_service:
-    build:
-      context: ./
-      dockerfile: Dockerfile
-    image: hotel/housekeeping_service:1.0
-    container_name: housekeeping_service
-    depends_on:
-      - mysql
-    ports:
-      - "5006:5006"
-    environment:
-      - dbURL=mysql+mysqlconnector://is213@host.docker.internal:3306/hotel
-
-  notification_service:
-    build:
-      context: ./
-      dockerfile: Dockerfile
-    image: hotel/notification_service:1.0
-    container_name: notification_service
-    depends_on:
-      - mysql
-    ports:
-      - "5007:3000"
-    environment:
-      - dbURL=mysql+mysqlconnector://is213@host.docker.internal:3306/hotel
-
-  room_management_service:
-    build:
-      context: ./
-      dockerfile: Dockerfile
-    image: hotel/room_management_service:1.0
-    container_name: room_management_service
-    depends_on:
-      - mysql
-    ports:
-      - "5007:5007"
-    environment:
-      - dbURL=mysql+mysqlconnector://is213@host.docker.internal:3306/hotel
-
-  room_service:
-    build:
-      context: ./
-      dockerfile: Dockerfile
-    image: hotel/room_service:1.0
-    container_name: room_service
-    depends_on:
-      - mysql
-    ports:
-      - "5008:5008"
-    environment:
-      - dbURL=mysql+mysqlconnector://is213@host.docker.internal:3306/hotel
-
-  roster_service:
-    build:
-      context: ./
-      dockerfile: Dockerfile
-    image: hotel/roster_service:1.0
-    container_name: roster_service
-    depends_on:
-      - mysql
-    ports:
-      - "5009:5009"
-    environment:
-      - dbURL=mysql+mysqlconnector://is213@host.docker.internal:3306/hotel
-
-  security_service:
-    build:
-      context: ./
-      dockerfile: Dockerfile
-    image: hotel/security_service:1.0
-    container_name: security_service
-    depends_on:
-      - mysql
-    ports:
-      - "5010:5010"
-    environment:
-      - dbURL=mysql+mysqlconnector://is213@host.docker.internal:3306/hotel
-
-  user_service:
-    build:
-      context: ./
-      dockerfile: Dockerfile
-    image: hotel/user_service:1.0
-    container_name: user_service
-    depends_on:
-      - mysql
-    ports:
-      - "5011:5011"
-    environment:
-      - dbURL=mysql+mysqlconnector://is213@host.docker.internal:3306/hotel
-
-  # RabbitMQ service for message queuing
   rabbitmq:
     image: rabbitmq:3-management
-    container_name: hotel_rabbitmq
+    hostname: puki-rabbit
+    restart: always
     ports:
       - "5672:5672"
       - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+    volumes: 
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # AMQP setup service
-  amqp_setup:
-    build:
-      context: ./
-      dockerfile: Dockerfile
-    image: hotel/amqp_setup:1.0
-    container_name: amqp_setup
-    command: python amqp_setup.py
-    depends_on:
-      - rabbitmq
-    environment:
-      - PYTHONUNBUFFERED=1
-      - rabbit_host=rabbitmq
-      - rabbit_port=5672
-      - rabbit_username=guest
-      - rabbit_password=guest
-    restart: on-failure:5
-
-  # Kong API Gateway
   kong-database:
-    image: postgres:13
-    container_name: kong-database
-    ports:
-      - "5432:5432"
+    image: postgres:17.4
+    restart: always
     environment:
-      - POSTGRES_USER=kong
-      - POSTGRES_DB=kong
-      - POSTGRES_PASSWORD=kongpass
+      POSTGRES_USER: kong
+      POSTGRES_DB: kong
+      POSTGRES_PASSWORD: password
+    ports: 
+      - "5432:5432"
     volumes:
-      - kong_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "kong"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  kong-migrations:
-    image: kong:latest
-    container_name: kong-migrations
+  kong-migration:
+    image: kong/kong-gateway:3.9
+    command: "kong migrations bootstrap"
+    restart: on-failure
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: password
     depends_on:
       - kong-database
-    environment:
-      - KONG_DATABASE=postgres
-      - KONG_PG_HOST=kong-database
-      - KONG_PG_USER=kong
-      - KONG_PG_PASSWORD=kongpass
-    command: kong migrations bootstrap
-    restart: on-failure
 
   kong:
-    image: kong:latest
-    container_name: kong
-    depends_on:
-      - kong-database
-      - kong-migrations
+    image: kong/kong-gateway:3.9
+    restart: always
     environment:
-      - KONG_DATABASE=postgres
-      - KONG_PG_HOST=kong-database
-      - KONG_PG_USER=kong
-      - KONG_PG_PASSWORD=kongpass
-      - KONG_PROXY_ACCESS_LOG=/dev/stdout
-      - KONG_ADMIN_ACCESS_LOG=/dev/stdout
-      - KONG_PROXY_ERROR_LOG=/dev/stderr
-      - KONG_ADMIN_ERROR_LOG=/dev/stderr
-      - KONG_ADMIN_LISTEN=0.0.0.0:8001, 0.0.0.0:8444 ssl
+      KONG_ENFORCE_RBAC: "off" # optional, depending on your setup
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: password
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_ADMIN_UI: false  # Disable the HTML UI
+      KONG_ADMIN_API_URI: http://localhost:8001
+      KONG_ADMIN_GUI_URL: http://localhost:8002
+      KONG_ADMIN_GUI_LISTEN: 0.0.0.0:8002
+    depends_on:
+      - kong-migration
     ports:
-      - "8000:8000"
-      - "8443:8443"
-      - "8001:8001"
-      - "8444:8444"
-    volumes:
-      - ./register-kong.sh:/register-kong.sh
-      - ./test-kong-services.sh:/test-kong-services.sh
-    command: kong start
+      - "8000:8000" # Takes incoming HTTP traffic from Consumers, and forwards it to upstream Services.
+      - "8001:8001" # Admin API. Listens for calls from the command line over HTTP.
+      - "8002:8002" # Kong Manager (GUI). Listens for HTTP traffic.
 
-  # Prometheus monitoring
   prometheus:
-    image: prom/prometheus
-    container_name: hotel_prometheus
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
+    image: prom/prometheus:latest
     ports:
       - "9090:9090"
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-
-  # Grafana visualization
-  grafana:
-    image: grafana/grafana
-    container_name: hotel_grafana
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
     depends_on:
-      - prometheus
+      - kong
+
+  grafana:
+    image: grafana/grafana:latest
     ports:
       - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
 
-volumes:
-  kong_data:
-  prometheus_data:
-  grafana_data:
+  ###################################
+  #1 Room: The Room microservice
+  ###################################
+  room:
+    build:
+      context: ./
+      dockerfile: room.Dockerfile
+    ports:
+      - "5008:5008"
+    networks:
+      - puki-network
+    environment:
+      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
+      - ROOM_URL=http://room:5008
+      - BOOKING_URL=http://booking:8000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5008/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ###################################
+  #2 Booking: The Booking microservice
+  ###################################
+  booking:
+    build:
+      context: ./
+      dockerfile: booking.Dockerfile
+    ports:
+      - "5002:5002"
+    environment:
+      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
+      - GUEST_URL=http://guest:5011
+      - PRICE_URL=http://price:8000
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ###################################
+  #3 Guest: The Guest microservice
+  ###################################
+  guest:
+    build:
+      context: ./
+      dockerfile: guest.Dockerfile
+    ports:
+      - "5011:5011"
+    networks:
+      - puki-network
+    environment:
+      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5011/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ###################################
+  #4 Housekeeping: The Housekeeping microservice
+  ###################################
+  housekeeping:
+    build:
+      context: ./
+      dockerfile: housekeeping.Dockerfile
+    ports:
+      - "5006:5006"
+    networks:
+      - puki-network
+    environment:
+      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
+      - ROOM_URL=http://room:5008
+      - ROSTER_URL=http://roster:5009
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5006/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ###################################
+  #5 Roster: The Roster microservice
+  ###################################
+  roster:
+    build:
+      context: ./
+      dockerfile: roster.Dockerfile
+    ports:
+      - "5009:5009"
+    environment:
+      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5009/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ###################################
+  #6 Security: The Security microservice
+  ###################################
+  security:
+    build:
+      context: ./
+      dockerfile: security.Dockerfile
+    ports:
+      - "5010:5010"
+    environment:
+      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5010/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ###################################
+  #7 Notification: The Notification microservice
+  ###################################
+  notification:
+    build:
+      context: ./
+      dockerfile: notification.Dockerfile
+    ports:
+      - "5007:5007"
+    networks:
+      - puki-network
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5007/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ###################################
+  #8 Price: The Price microservice
+  ###################################
+  price:
+    build:
+      context: ./
+      dockerfile: price.Dockerfile  
+    ports:
+      - "8006:8000"   
+    environment:
+      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5    
+
+  ###################################
+  #9 Checkin: The Checkin microservice
+  ###################################
+  checkin:
+    build:
+      context: ./
+      dockerfile: checkin.Dockerfile
+    ports:
+      - "5005:5005"
+    networks:
+      - puki-network
+    environment:
+      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
+      - BOOKING_URL=http://booking:5002
+      - GUEST_URL=http://guest:5003
+      - SECURITY_URL=http://security:5010
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5005/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ###################################
+  #10 Checkout: The Checkout microservice
+  ###################################
+  checkout:
+    build:
+      context: ./
+      dockerfile: checkout.Dockerfile
+    ports:
+      - "5004:5004"
+    networks:
+      - puki-network
+    environment:
+      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
+      - BOOKING_URL=http://booking:5002
+      - GUEST_URL=http://guest:5003
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5004/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
