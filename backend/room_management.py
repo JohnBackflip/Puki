@@ -50,7 +50,7 @@ def get_available_rooms():
 
     check_date = datetime.strptime(date_str, "%Y-%m-%d").date()
 
-    room_service_url = "http://localhost:5006/rooms/status/VACANT"
+    room_service_url = "http://localhost:5008/rooms/status/VACANT"
     room_response = requests.get(room_service_url)
 
     if room_response.status_code != 200:
@@ -100,5 +100,3 @@ def get_all_rooms():
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5007, debug=True)
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5007, debug=True)

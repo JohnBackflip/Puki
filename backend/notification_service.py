@@ -21,7 +21,7 @@ def callback(ch, method, properties, body):
     message = data.get('message')
 
     if mobile_number:
-        print(f"📩 Received SMS request for {mobile_number}")
+        print(f"Received SMS request for {mobile_number}")
         send_sms(mobile_number, message)
 
 # Connect to RabbitMQ

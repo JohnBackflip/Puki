@@ -28,7 +28,7 @@ class Keycard(db.Model):
     user_id = db.Column(db.Integer, nullable=True)  # Staff who issued the key (None for self check-in)
     customer_id = db.Column(db.Integer, nullable=False)  # Customer using the key
     room_id = db.Column(db.String(36), nullable=False)
-    key_pin = db.Column(db.String(6), nullable=False)  # ✅ 6-digit PIN
+    key_pin = db.Column(db.String(6), nullable=False)  # 6-digit PIN
     issued_at = db.Column(db.DateTime, default=datetime.utcnow)
     expires_at = db.Column(db.DateTime, nullable=True)  # Null if not expired
 
@@ -68,7 +68,7 @@ def generate_keycard():
         return jsonify({"code": 400, "message": "Invalid booking ID."}), 400
 
     booking_data = booking_response.json()["data"]
-    check_out_date = booking_data["check_out_date"]  # ✅ Format: YYYY-MM-DD
+    check_out_date = booking_data["check_out_date"]  # Format: YYYY-MM-DD
 
     # convert to `expires_at` (Check-Out Date at 3 PM)
     expires_at = datetime.strptime(check_out_date, "%Y-%m-%d") + timedelta(hours=15)  # 3 PM
@@ -157,4 +157,4 @@ def update_keycard_expiry(booking_id):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5004, debug=True)
+    app.run(host="0.0.0.0", port=5010, debug=True)

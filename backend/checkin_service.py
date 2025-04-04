@@ -34,7 +34,7 @@ def self_checkin():
         return jsonify({"code": 400, "message": "Check-in is only allowed on the check-in date."}), 400
 
     # verify customer exists and is Verified
-    customer_url = f"http://localhost:5003/customers/{customer_id}"
+    customer_url = f"http://localhost:5005/customers/{customer_id}"
     customer_response = requests.get(customer_url)
 
     if customer_response.status_code != 200:
@@ -49,7 +49,7 @@ def self_checkin():
         return jsonify({"code": 400, "message": "Full name does not match booking record."}), 400
 
     # generate keycard in `security_service`
-    keycard_url = "http://localhost:5004/keycards"
+    keycard_url = "http://localhost:5010/keycards"
     keycard_payload = {
         "booking_id": booking_id,
         "customer_id": customer_id,
@@ -76,4 +76,4 @@ def self_checkin():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5005, debug=True)
+    app.run(host="0.0.0.0", port=5003, debug=True)

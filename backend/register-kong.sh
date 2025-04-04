@@ -2,6 +2,7 @@
 
 KONG_ADMIN_URL=http://localhost:8021
 
+#change the declared ports
 declare -A services=(
   [housekeeping-service]="http://housekeeping_service:8000"
   [auth-service]="http://auth_service:8000"
@@ -40,5 +41,5 @@ for service in "${!services[@]}"; do
     --data paths[]="$path" \
     --data strip_path=true
 
-  echo "✅ Registered: $service → $path"
+  echo "Registered: $service → $path"
 done

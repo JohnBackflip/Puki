@@ -104,4 +104,4 @@ def get_room_pin(room_id):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5006, debug=True)
+    app.run(host="0.0.0.0", port=5008, debug=True)

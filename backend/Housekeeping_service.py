@@ -10,8 +10,9 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app)
 
-roster_url = "http://localhost:4001/roster"
-housekeepers_url = "http://localhost:4000/housekeepers"
+roster_url = "http://localhost:5009/roster"
+# missing housekeepers 
+# housekeepers_url = "http://localhost:4000/housekeepers"
 
 @app.route("/housekeeping", methods=["POST"])
 def assign_housekeeper():
@@ -32,11 +33,11 @@ def assign_housekeeper():
     task_result = invoke_http(roster_url, method='POST', json=task_json)
 
     # Update room availability
-    room_url = "http://localhost:5006/rooms/" + str(room_id) + "/update-status"
+    room_url = "http://localhost:5008/rooms/" + str(room_id) + "/update-status"
     room_status = {"status": "CLEANING"}
     #room_result = invoke_http(room_url, method="PUT", json=room_status)
 
     return task_result
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=7001, debug=True)
+    app.run(host="0.0.0.0", port=5006, debug=True)

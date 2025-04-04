@@ -87,9 +87,9 @@ def create_booking():
     customer_check_url = f"http://localhost:5003/customers/{data['customer_id']}"
     customer_response = requests.get(customer_check_url)
 
-    print(f"Customer Check URL: {customer_check_url}")  # ✅ Debugging
-    print(f"Customer API Status Code: {customer_response.status_code}")  # ✅ Debugging
-    print(f"Customer API Response: {customer_response.json()}")  # ✅ Debugging
+    print(f"Customer Check URL: {customer_check_url}")  # Debugging
+    print(f"Customer API Status Code: {customer_response.status_code}")  # Debugging
+    print(f"Customer API Response: {customer_response.json()}")  # Debugging
 
 
     if customer_response.status_code != 200:
