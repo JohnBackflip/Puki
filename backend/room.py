@@ -138,7 +138,7 @@ def get_available_rooms():
     final_available_rooms = []
 
     for room in vacant_rooms:
-        booking_check_url = f"{booking_url}/bookings?room_id={room.room_id}&date={date_str}"
+        booking_check_url = f"{booking_url}/booking?room_id={room.room_id}&date={date_str}"
         try:
             booking_response = requests.get(booking_check_url)
             if booking_response.status_code == 404:
@@ -168,7 +168,7 @@ def get_available_rooms():
 #     booking_url = environ.get("BOOKING_URL", "http://booking:5002")
     
 #     for room in vacant_rooms:
-#         booking_check_url = f"{booking_url}/bookings?room_id={room.room_id}&date={date_str}"
+#         booking_check_url = f"{booking_url}/booking?room_id={room.room_id}&date={date_str}"
 #         try:
 #             booking_response = requests.get(booking_check_url)
 #             if booking_response.status_code == 404:

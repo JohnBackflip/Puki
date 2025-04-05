@@ -60,7 +60,8 @@ CREATE TABLE IF NOT EXISTS roster (
 CREATE TABLE IF NOT EXISTS price (
     room_id VARCHAR(5) PRIMARY KEY NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
-    FOREIGN KEY (room_id) REFERENCES room(room_id)
+    floor INT NOT NULL,
+    room_type ENUM('Single', 'Family', 'PresidentialSuite') NOT NULL
 );
 
 -- Insert data into guest
@@ -121,14 +122,15 @@ INSERT INTO roster (date, floor, room_id, housekeeper_id, name, completed) VALUE
 ('2025-04-10', 4, '402', 10, 'Oliver Clark', FALSE);
 
 -- Insert data into price
-INSERT INTO price (room_id, price) VALUES
-('101', 100.00),
-('102', 200.00),
-('201', 500.00),
-('202', 100.00),
-('203', 200.00),
-('204', 500.00),
-('301', 100.00),
-('302', 200.00),
-('401', 500.00),
-('402', 100.00);
+INSERT INTO price (room_id, floor, room_type, price) VALUES
+('101', 1, 'Single', 100.00),
+('102', 1, 'Family', 200.00),
+('103', 1, 'PresidentialSuite', 500.00),
+('201', 2, 'PresidentialSuite', 500.00),
+('202', 2, 'Single', 100.00),
+('203', 2, 'Family', 200.00),
+('204', 2, 'PresidentialSuite', 500.00),
+('301', 3, 'Single', 100.00),
+('302', 3, 'Family', 200.00),
+('401', 4, 'PresidentialSuite', 500.00),
+('402', 4, 'Single', 100.00);

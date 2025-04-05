@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from datetime import datetime
 import threading
-import invokes  # Using invokes for HTTP requests
+import invokes 
 import time
 from os import environ
 
@@ -84,7 +84,7 @@ def simulate_cleaning_cycle(room_id):
 
     try:
         # Query if room is occupied
-        booking_response = invokes.invoke_http(f"{ROOM_URL}/bookings/active/{room_id}", method="GET")
+        booking_response = invokes.invoke_http(f"{ROOM_URL}/booking/active/{room_id}", method="GET")
         if booking_response.get("code") == 200:
             final_status = "OCCUPIED"
         else:

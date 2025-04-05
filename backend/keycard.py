@@ -110,7 +110,7 @@ def generate_keycard():
             return jsonify({"code": 400, "message": "Keycard already exists for this booking."}), 400
 
         # Get the booking information
-        booking_url = f"http://booking:5002/bookings/{data['booking_id']}"
+        booking_url = f"http://booking:5002/booking/{data['booking_id']}"
         print("Fetching booking from:", booking_url)  # Add logging
         booking_response = requests.get(booking_url)
         print("Booking response:", booking_response.text)  # Add logging
@@ -119,12 +119,12 @@ def generate_keycard():
             return jsonify({"code": 400, "message": f"Invalid booking ID. Booking service returned: {booking_response.text}"}), 400
 
         booking_data = booking_response.json()["data"]
-        check_in_date = booking_data["check_in"]  # Format: YYYY-MM-DD
-        check_out_date = booking_data["check_out"]  # Format: YYYY-MM-DD
+        check_in = booking_data["check_in"]  # Format: YYYY-MM-DD
+        check_out = booking_data["check_out"]  # Format: YYYY-MM-DD
 
         # Convert to datetime objects
-        check_in = datetime.strptime(check_in_date, "%Y-%m-%d")
-        check_out = datetime.strptime(check_out_date, "%Y-%m-%d")
+        check_in = datetime.strptime(check_in, "%Y-%m-%d")
+        check_out = datetime.strptime(check_out, "%Y-%m-%d")
 
         # Get today's date
         today = datetime.utcnow().date()

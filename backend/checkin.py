@@ -4,7 +4,6 @@ from flask_cors import CORS
 from datetime import datetime
 import invokes
 from os import environ
-import requests
 
 app = Flask(__name__)
 CORS(app)
@@ -44,8 +43,8 @@ def self_checkin():
     # Check if today is the check-in date
     #today = datetime.strptime("2025-04-06", "%Y-%m-%d").date()  # Using the actual check-in date
     today = datetime.utcnow().date()  # Get current UTC date
-    check_in_date = datetime.strptime(check_in, "%Y-%m-%d").date()
-    if today != check_in_date:
+    check_in = datetime.strptime(check_in, "%Y-%m-%d").date()
+    if today != check_in:
         return jsonify({
             "code": 400, 
             "message": f"Check-in is only allowed on the check-in date ({check_in}). Today is {today.strftime('%Y-%m-%d')}."
@@ -75,24 +74,24 @@ def self_checkin():
     print(f"Payload types: booking_id={type(keycard_payload['booking_id'])}, guest_id={type(keycard_payload['guest_id'])}, floor={type(keycard_payload['floor'])}")
     
     # First check if a keycard already exists
-    existing_keycard_response = requests.get(f"http://{KEYCARD_HOST}:{KEYCARD_PORT}/keycard/{booking_id}")
+    existing_keycard_response = invokes.invoke_http(f"http://{KEYCARD_HOST}:{KEYCARD_PORT}/keycard/{booking_id}", method="GET")
     
     if existing_keycard_response.status_code == 200:
         keycard_data = existing_keycard_response.json().get('data', {})
         if keycard_data.get('issued_at') == 'None' or keycard_data.get('key_pin') == '00None':
             # Keycard exists but is invalid - delete and recreate
-            delete_response = requests.delete(f"http://{KEYCARD_HOST}:{KEYCARD_PORT}/keycard/{booking_id}")
+            delete_response = invokes.invoke_http(f"http://{KEYCARD_HOST}:{KEYCARD_PORT}/keycard/{booking_id}", method="DELETE")
             print(f"Deleted invalid keycard: {delete_response.status_code}, {delete_response.text}")
             
             # Now create a new keycard
-            keycard_response = requests.post(f"http://{KEYCARD_HOST}:{KEYCARD_PORT}/keycard", json=keycard_payload)
+            keycard_response = invokes.invoke_http(f"http://{KEYCARD_HOST}:{KEYCARD_PORT}/keycard", json=keycard_payload, method="POST")
             print(f"Create keycard response: Status={keycard_response.status_code}, Response={keycard_response.text}")
         else:
             # Valid keycard already exists
             keycard_response = existing_keycard_response
     else:
         # No keycard exists, create a new one
-        keycard_response = requests.post(f"http://{KEYCARD_HOST}:{KEYCARD_PORT}/keycard", json=keycard_payload)
+        keycard_response = invokes.invoke_http(f"http://{KEYCARD_HOST}:{KEYCARD_PORT}/keycard", json=keycard_payload, method="POST")
     
     print(f"Keycard response: {keycard_response.status_code}, {keycard_response.text}")
 

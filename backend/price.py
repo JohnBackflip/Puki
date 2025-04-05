@@ -11,7 +11,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Database Configuration
-app.config["SQLALCHEMY_DATABASE_URI"] = environ.get("DATABASE_URL")
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///price.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
@@ -22,11 +22,11 @@ class Price(db.Model):
 
     room_id = db.Column(db.String(36), primary_key=True)
     floor = db.Column(db.Integer, nullable=False)
-    room_type = db.Column(db.String(50), nullable=False, unique=True)
+    room_type = db.Column(db.String(50), nullable=False)
     price = db.Column(db.Float, nullable=False)
 
     def __init__(self, room_id, floor, room_type, price):
-        self.room_id = self.generate_room_id(floor)
+        self.room_id = room_id  # Use the provided room_id
         self.floor = floor
         self.room_type = room_type
         self.price = price
@@ -38,34 +38,28 @@ class Price(db.Model):
             "room_type": self.room_type,
             "price": self.price,
         }
-
-    def generate_room_id(self, floor):
-        # Find the last room on the floor to get the next available room number
-        last_room = db.session.query(Price).filter_by(floor=floor).order_by(Price.room_id.desc()).first()
-
-        # If there are no rooms yet for the floor, start with 01
-        if not last_room:
-            return f"{floor}01"
-
-        # Get the numeric part of the last room ID
-        last_room_id = last_room.room_id
-        last_room_number = int(last_room_id[1:])  # Remove the floor prefix and get the room number
-        new_room_number = str(last_room_number + 1).zfill(2)  # Increment and pad with leading zeros
-        
-        # Generate the new room_id and check if it exists
-        new_room_id = f"{floor}{new_room_number}"
-
-        # Check if the room_id already exists
-        while db.session.query(Price).filter_by(room_id=new_room_id).first():
-            last_room_number += 1  # Increment if the room_id already exists
-            new_room_number = str(last_room_number).zfill(2)  # Ensure it stays two digits
-            new_room_id = f"{floor}{new_room_number}"  # Generate new room_id
-
-        return new_room_id
     
 #create table
 with app.app_context():
     db.create_all()
+    
+    # Add price for room 103 if it doesn't exist
+    existing_price = db.session.query(Price).filter_by(room_id="103").first()
+    if not existing_price:
+        print("Creating price for room 103")
+        new_price = Price(
+            room_id="103",
+            floor=1,
+            room_type="PresidentialSuite",
+            price=500.0
+        )
+        db.session.add(new_price)
+        try:
+            db.session.commit()
+            print("Created price for room 103")
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error creating price for room 103: {str(e)}")
 
 #health check
 @app.route("/health")
@@ -180,6 +174,19 @@ def adjust_prices_by_season():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
+# Get price by room_id
+@app.route("/price/<string:room_id>", methods=["GET"])
+def get_price_by_room_id(room_id: str):
+    print(f"Looking for price with room_id: '{room_id}'")
+    
+    price = db.session.query(Price).filter_by(room_id=room_id).first()
+    if price:
+        print("Match found!")
+        return jsonify(price.json())
+    
+    print("No match found")
+    return jsonify({"error": "Price not found"}), 404
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5003, debug=True)

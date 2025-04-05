@@ -51,10 +51,10 @@ def checkout():
         booking_data = booking_response.get("data")
         guest_id = booking_data["guest_id"]
         check_out_str = booking_data["check_out"]
-        check_out_date = datetime.strptime(check_out_str, "%Y-%m-%d").date()
+        check_out = datetime.strptime(check_out_str, "%Y-%m-%d").date()
         today = datetime.today().date()
 
-        if today != check_out_date:
+        if today != check_out:
             return jsonify({
                 "code": 400,
                 "message": f"Check-out is only allowed on the check-out date ({check_out_str}). Today is {today}."

@@ -24,8 +24,8 @@ def create_booking():
     data = request.get_json()
 
     # Validate dates
-    check_in = datetime.strptime(data["check_in_date"], "%Y-%m-%d").date()
-    check_out = datetime.strptime(data["check_out_date"], "%Y-%m-%d").date()
+    check_in = datetime.strptime(data["check_in"], "%Y-%m-%d").date()
+    check_out = datetime.strptime(data["check_out"], "%Y-%m-%d").date()
 
     if check_out <= check_in:
         return jsonify({"code": 400, "message": "Check-out date must be later than check-in date."}), 400
@@ -62,16 +62,16 @@ def create_booking():
     print("Guest data:", guest_data)  # Debug log
 
     # Check room availability
-    availability_check_url = f"{BOOKING_URL}/bookings/check-availability"
+    availability_check_url = f"{BOOKING_URL}/booking/availability"
     availability_data = {
         "room_id": data["room_id"],
-        "check_in_date": data["check_in_date"],
-        "check_out_date": data["check_out_date"]
+        "check_in": data["check_in"],
+        "check_out": data["check_out"]
     }
     availability_response = invokes.invoke_http(availability_check_url, method="POST", json=availability_data)
     print("Availability response:", availability_response)  # Debug log
     
-    if not isinstance(availability_response, dict) or availability_response.get("code") != 200:
+    if not isinstance(availability_response, dict) or not availability_response.get("available", False):
         return jsonify({"code": 400, "message": "Room is already booked for the selected period."}), 400
 
     # Fetch expected price from PRICE_URL
@@ -94,12 +94,17 @@ def create_booking():
         }), 400
 
     # Create the booking in the booking service
-    create_booking_url = f"{BOOKING_URL}/bookings"
+    create_booking_url = f"{BOOKING_URL}/booking"
     booking_response = invokes.invoke_http(create_booking_url, method="POST", json=data)
     print("Booking response:", booking_response)  # Debug log
     
-    if not isinstance(booking_response, dict) or booking_response.get("code") != 201:
-        return jsonify({"code": 500, "message": "Error creating booking."}), 500
+    if not isinstance(booking_response, dict):
+        print("Invalid booking response format")  # Debug log
+        return jsonify({"code": 500, "message": "Error creating booking: Invalid response format."}), 500
+        
+    if booking_response.get("code") != 201:
+        print("Booking creation failed with code:", booking_response.get("code"))  # Debug log
+        return jsonify({"code": 500, "message": f"Error creating booking: {booking_response.get('message', 'Unknown error')}"}), 500
 
     booking_data = booking_response.get("data")
     if not booking_data:
