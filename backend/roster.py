@@ -79,13 +79,13 @@ def create_roster():
         db.session.rollback()
         return jsonify({"error": f"Error creating roster entry: {str(e)}"}), 500
 
-# Get roster by date
-@app.route("/roster/<string:date>", methods=["GET"])
-def get_roster_by_date(date):
-    roster_list = Roster.query.filter_by(date=date).all()
+# Get roster by housekeeper ID
+@app.route("/roster/housekeeper/<int:housekeeper_id>", methods=["GET"])
+def get_roster_by_housekeeper_id(housekeeper_id):
+    roster_list = Roster.query.filter_by(housekeeper_id=housekeeper_id).all()
     if roster_list:
         return jsonify({"data": [r.json() for r in roster_list]}), 200
-    return jsonify({"message": "No roster found for the provided date."}), 404
+    return jsonify({"message": "No roster found for the provided housekeeper ID."}), 404
 
 # Update a roster entry (status change)
 @app.route("/roster/<string:date>/<string:room_id>", methods=["PUT"])
@@ -112,26 +112,25 @@ def delete_roster(date, room_id):
 
     return jsonify({"message": "Roster entry not found."}), 404
 
-# Get available housekeepers
-@app.route("/housekeepers/available", methods=["GET"])
-def get_available_housekeepers():
-    try:
-        today = date.today().date()
+# New endpoint for assigning housekeeper by date & floor
+@app.route("/roster/assign", methods=["GET"])
+def get_housekeeper_by_date_and_floor():
+    date = request.args.get("date")
+    floor = request.args.get("floor")
 
-        # Get all housekeepers assigned today
-        assigned_ids = db.session.query(Roster.housekeeper_id).filter_by(date=today).all()
-        assigned_ids = {id[0] for id in assigned_ids}
+    if not date or not floor:
+        return jsonify({"code": 400, "message": "Missing date or floor parameter"}), 400
 
-        # For demo: Assume housekeepers 1 to 5 exist
-        all_ids = set(range(1, 6))
-        available = list(all_ids - assigned_ids)
+    roster_entry = Roster.query.filter_by(date=date, floor=int(floor)).first()
+    if not roster_entry:
+        return jsonify({"code": 404, "message": "No housekeeper assigned for this floor on the given date."}), 404
 
-        return jsonify({
-            "code": 200,
-            "data": [{"housekeeper_id": hk_id} for hk_id in available]
-        }), 200
-    except Exception as e:
-        return jsonify({"code": 500, "message": str(e)}), 500
+    return jsonify({
+        "code": 200,
+        "data": {
+            "assigned_housekeeper": roster_entry.housekeeper_id
+        }
+    }), 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5009, debug=True)

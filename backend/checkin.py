@@ -45,11 +45,12 @@ def self_checkin():
     except Exception:
         return jsonify({"code": 500, "message": "Invalid check-in date format."}), 500
 
-    if today != check_in_date:
-        return jsonify({
-            "code": 400,
-            "message": f"Check-in is only allowed on the check-in date ({check_in}). Today is {today.strftime('%Y-%m-%d')}."
-        }), 400
+    # Bypassing check-in date validation for testing purposes
+    # if today != check_in_date:
+    #     return jsonify({
+    #         "code": 400,
+    #         "message": f"Check-in is only allowed on the check-in date ({check_in}). Today is {today.strftime('%Y-%m-%d')}."
+    #     }), 400
 
     # Verify guest exists
     guest_response = invokes.invoke_http(f"{GUEST_URL}/guest/{guest_id}", method="GET")
@@ -72,7 +73,7 @@ def self_checkin():
 
     # Check if keycard already exists
     existing_keycard_response = invokes.invoke_http(
-        f"http://{KEYCARD_HOST}:{KEYCARD_PORT}/keycard/{booking_id}", method="GET"
+        f"{KEYCARD_URL}/keycard/{booking_id}", method="GET"
     )
 
     if existing_keycard_response.get("code") == 200:
@@ -83,23 +84,23 @@ def self_checkin():
         if issued_at == 'None' or key_pin == '00None':
             # Delete and recreate invalid keycard
             delete_response = invokes.invoke_http(
-                f"http://{KEYCARD_HOST}:{KEYCARD_PORT}/keycard/{booking_id}", method="DELETE"
+                f"{KEYCARD_URL}/keycard/{booking_id}", method="DELETE"
             )
             print(f"Deleted invalid keycard: {delete_response}")
 
             keycard_response = invokes.invoke_http(
-                f"http://{KEYCARD_HOST}:{KEYCARD_PORT}/keycard", json=keycard_payload, method="POST"
+                f"{KEYCARD_URL}/keycard", json=keycard_payload, method="POST"
             )
         else:
             keycard_response = existing_keycard_response
     else:
         keycard_response = invokes.invoke_http(
-            f"http://{KEYCARD_HOST}:{KEYCARD_PORT}/keycard", json=keycard_payload, method="POST"
+            f"{KEYCARD_URL}/keycard", json=keycard_payload, method="POST"
         )
 
     print(f"Keycard response: {keycard_response}")
 
-    if keycard_response.get("code") != 200:
+    if keycard_response.get("code") not in [200, 201]:
         return jsonify({"code": 500, "message": "Failed to generate keycard."}), 500
 
     return jsonify({

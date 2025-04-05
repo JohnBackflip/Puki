@@ -11,7 +11,7 @@ CORS(app)
 BOOKING_URL = environ.get('BOOKING_URL', 'http://localhost:5002')
 GUEST_URL = environ.get('GUEST_URL', 'http://localhost:5011')
 ROOM_URL = environ.get('ROOM_URL', 'http://localhost:5008')
-PRICE_URL = environ.get('PRICE_URL', 'http://localhost:5009')
+PRICE_URL = environ.get('PRICE_URL', 'http://localhost:5003')  # Updated to port 5003
 
 #health check
 @app.route("/health", methods=["GET"])
@@ -77,21 +77,68 @@ def create_booking():
     # Fetch expected price from PRICE_URL
     price_url = f"{PRICE_URL}/price/{data['room_type']}"
     price_response = invokes.invoke_http(price_url, method="GET")
+    print("Price response:", price_response)  # Debug log
 
-    if price_response.get("code") != 200:
-        return jsonify({"code": 500, "message": "Failed to retrieve price data."}), 500
+    # Handle different response formats from the price service
+    if isinstance(price_response, str):
+        try:
+            import json
+            price_response = json.loads(price_response)
+            print("Parsed price response:", price_response)
+        except Exception as e:
+            print("Error parsing price response:", str(e))
+            return jsonify({"code": 500, "message": f"Failed to parse price data: {str(e)}"}), 500
 
-    expected_price = price_response.get("data", {}).get("price")
+    # Handle both list and dictionary responses
+    if isinstance(price_response, dict):
+        # If it's a dictionary with data field containing a list
+        if "data" in price_response and isinstance(price_response["data"], list):
+            price_list = price_response["data"]
+        # If it's a dictionary with a direct price field
+        elif "price" in price_response:
+            expected_price = price_response["price"]
+            if float(data["price"]) != float(expected_price):
+                return jsonify({
+                    "code": 400,
+                    "message": f"Price mismatch. Expected: {expected_price}, Provided: {data['price']}"
+                }), 400
+            # Skip the rest of the price checking logic
+            print(f"Using direct price from response: {expected_price}")
+            goto_create_booking = True
+        else:
+            return jsonify({"code": 500, "message": "Missing price data in response"}), 500
+    elif isinstance(price_response, list):
+        price_list = price_response
+    else:
+        return jsonify({"code": 500, "message": f"Invalid price data format: {type(price_response)}"}), 500
 
-    if expected_price is None:
-        return jsonify({"code": 500, "message": "Missing price data from price service."}), 500
+    # Only do this price list processing if we don't have a direct price
+    goto_create_booking = locals().get("goto_create_booking", False)
+    if not goto_create_booking:
+        if not price_list:
+            return jsonify({"code": 500, "message": "No price data found for the room type."}), 500
 
-    # Check if provided price matches expected price
-    if float(data["price"]) != float(expected_price):
-        return jsonify({
-            "code": 400,
-            "message": f"Price mismatch. Expected: {expected_price}, Provided: {data['price']}"
-        }), 400
+        # Get the price for the selected room_id
+        room_id = data["room_id"]
+        expected_price = None
+        for room in price_list:
+            if room.get("room_id") == room_id:
+                expected_price = room.get("price")
+                break
+        
+        # If no exact room match, use the first room of the requested type
+        if expected_price is None and price_list:
+            expected_price = price_list[0].get("price")
+
+        if expected_price is None:
+            return jsonify({"code": 500, "message": "Missing price data from price service."}), 500
+
+        # Check if provided price matches expected price
+        if float(data["price"]) != float(expected_price):
+            return jsonify({
+                "code": 400,
+                "message": f"Price mismatch. Expected: {expected_price}, Provided: {data['price']}"
+            }), 400
 
     # Create the booking in the booking service
     create_booking_url = f"{BOOKING_URL}/booking"
@@ -113,4 +160,4 @@ def create_booking():
     return jsonify({"code": 201, "data": booking_data}), 201
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5013, debug=True)
+    app.run(host="0.0.0.0", port=5013, debug=True) 

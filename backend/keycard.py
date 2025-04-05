@@ -67,7 +67,7 @@ def health():
 def generate_keycard():
     try:
         data = request.get_json()
-        print("Received data:", data)  # Add logging
+        print("Received keycard creation request data:", data)  # Add logging
         if not data:
             return jsonify({"code": 400, "message": "No JSON data received"}), 400
 
@@ -91,18 +91,29 @@ def generate_keycard():
         existing_keycard = db.session.scalar(db.select(Keycard).filter_by(booking_id=data["booking_id"]))
         if existing_keycard:
             print(f"Keycard already exists for booking {data['booking_id']}")  # Add detailed logging
-            return jsonify({"code": 400, "message": "Keycard already exists for this booking."}), 400
+            return jsonify({"code": 200, "data": existing_keycard.json(), "message": "Existing keycard returned"}), 200
 
         # Get the booking information
-        booking_url = f"http://booking:5002/booking/{data['booking_id']}"
-        print("Fetching booking from:", booking_url)  # Add logging
-        booking_response = requests.get(booking_url)
-        print("Booking response:", booking_response.text)  # Add logging
+        booking_url = environ.get('BOOKING_URL', 'http://localhost:5002')
+        booking_endpoint = f"{booking_url}/booking/{data['booking_id']}"
+        print("Fetching booking from:", booking_endpoint)  # Add logging
+        
+        try:
+            booking_response = requests.get(booking_endpoint)
+            print("Booking response status:", booking_response.status_code)  # Add logging
+            print("Booking response text:", booking_response.text)  # Add logging
+            
+            if booking_response.status_code != 200:
+                return jsonify({"code": 400, "message": f"Invalid booking ID. Booking service returned: {booking_response.text}"}), 400
+            
+            booking_data = booking_response.json()["data"]
+        except requests.RequestException as e:
+            print(f"Request error fetching booking: {str(e)}")
+            return jsonify({"code": 500, "message": f"Error communicating with booking service: {str(e)}"}), 500
+        except Exception as e:
+            print(f"Error processing booking response: {str(e)}")
+            return jsonify({"code": 500, "message": f"Error processing booking data: {str(e)}"}), 500
 
-        if booking_response.status_code != 200:
-            return jsonify({"code": 400, "message": f"Invalid booking ID. Booking service returned: {booking_response.text}"}), 400
-
-        booking_data = booking_response.json()["data"]
         check_in = booking_data["check_in"]  # Format: YYYY-MM-DD
         check_out = booking_data["check_out"]  # Format: YYYY-MM-DD
 

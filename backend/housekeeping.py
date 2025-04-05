@@ -25,32 +25,54 @@ def housekeeping():
         data = request.get_json()
         room_id = data.get("room_id")
         floor = data.get("floor")
-        if not room_id or not floor:
+        if not room_id or floor is None:
             return jsonify({"code": 400, "message": "room_id and floor are required"}), 400
 
         today = datetime.today().strftime("%Y-%m-%d")
 
         # 1. Fetch housekeeper assigned to the floor from Roster
-        roster_response = invokes.invoke_http(
+        raw_response = invokes.invoke_http(
             f"{ROSTER_URL}/roster/assign",
             method="GET",
             params={"date": today, "floor": floor}
         )
 
+        try:
+            roster_response = raw_response if isinstance(raw_response, dict) else raw_response.json()
+        except Exception as e:
+            return jsonify({"code": 500, "message": f"Invalid roster response: {str(e)}"}), 500
+
+        print("DEBUG: Roster response =", roster_response)
+
         if roster_response.get("code") != 200:
             return jsonify({"code": 404, "message": "No housekeeper assigned for this floor today."}), 404
 
         assigned_housekeeper = roster_response.get("data", {}).get("assigned_housekeeper")
+        if assigned_housekeeper is None:
+            return jsonify({"code": 404, "message": "No housekeeper assigned for this floor today."}), 404
 
         # 2. Update room status to CLEANING via Room service
-        room_response = invokes.invoke_http(
-            f"{ROOM_URL}/room/status/{room_id}",
-            method="PUT",
-            json={"status": "CLEANING"}
-        )
-
-        if room_response.get("code") != 200:
-            return jsonify({"code": 500, "message": "Failed to update room status"}), 500
+        room_update_url = f"{ROOM_URL}/room/{room_id}/update-status"
+        print(f"DEBUG: Updating room status at URL: {room_update_url}")
+        try:
+            room_response = invokes.invoke_http(
+                room_update_url,
+                method="PUT",
+                json={"status": "CLEANING"}
+            )
+            print(f"DEBUG: Room update response: {room_response}")
+            
+            if not isinstance(room_response, dict):
+                print(f"DEBUG: Room response is not a dict: {room_response}")
+                return jsonify({"code": 500, "message": "Failed to update room status - invalid response format"}), 500
+                
+            if room_response.get("code") != 200:
+                print(f"DEBUG: Room update failed with code: {room_response.get('code')} - {room_response.get('message', 'No error message')}")
+                return jsonify({"code": 500, "message": f"Failed to update room status: {room_response.get('message', 'Unknown error')}"}), 500
+                
+        except Exception as e:
+            print(f"DEBUG: Exception updating room status: {str(e)}")
+            return jsonify({"code": 500, "message": f"Exception updating room status: {str(e)}"}), 500
 
         # 3. Simulate cleaning cycle in background
         thread = threading.Thread(target=simulate_cleaning_cycle, args=(room_id,))
@@ -58,7 +80,7 @@ def housekeeping():
 
         return jsonify({
             "code": 200,
-            "message": f"Room {room_id} marked for cleaning and assigned to {assigned_housekeeper}",
+            "message": f"Room {room_id} marked for cleaning and assigned to housekeeper {assigned_housekeeper}",
             "housekeeper": assigned_housekeeper
         }), 200
 
@@ -67,31 +89,31 @@ def housekeeping():
 
 # simulate cleaning cycle
 def simulate_cleaning_cycle(room_id):
-    # Wait to simulate cleaning (e.g., 10 seconds)
     time.sleep(10)
     print(f"[INFO] Cleaning completed for room {room_id}")
 
-    # Update room status to COMPLETED
     try:
-        room_status_response = invokes.invoke_http(f"{ROOM_URL}/rooms/{room_id}/update-status", method="PUT", json={"status": "COMPLETED"})
+        room_status_response = invokes.invoke_http(
+            f"{ROOM_URL}/room/{room_id}/update-status",
+            method="PUT",
+            json={"status": "COMPLETED"}
+        )
         if room_status_response.get("code") != 200:
             print(f"[ERROR] Failed to set COMPLETED status for room {room_id}")
     except Exception as e:
         print(f"[ERROR] Failed to set COMPLETED status: {str(e)}")
 
-    # Wait before determining final room status (e.g., 5 seconds)
     time.sleep(5)
 
     try:
-        # Query if room is occupied
         booking_response = invokes.invoke_http(f"{ROOM_URL}/booking/active/{room_id}", method="GET")
-        if booking_response.get("code") == 200:
-            final_status = "OCCUPIED"
-        else:
-            final_status = "VACANT"
-
+        final_status = "OCCUPIED" if booking_response.get("code") == 200 else "VACANT"
         print(f"[INFO] Final status for room {room_id}: {final_status}")
-        room_status_response = invokes.invoke_http(f"{ROOM_URL}/rooms/{room_id}/update-status", method="PUT", json={"status": final_status})
+        room_status_response = invokes.invoke_http(
+            f"{ROOM_URL}/room/{room_id}/update-status",
+            method="PUT",
+            json={"status": final_status}
+        )
         if room_status_response.get("code") != 200:
             print(f"[ERROR] Failed to set final status for room {room_id}")
     except Exception as e:
