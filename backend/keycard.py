@@ -6,6 +6,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from os import environ
+import traceback
 
 app = Flask(__name__)
 CORS(app)
@@ -67,100 +68,57 @@ def health():
 def generate_keycard():
     try:
         data = request.get_json()
-        print("Received keycard creation request data:", data)  # Add logging
-        if not data:
-            return jsonify({"code": 400, "message": "No JSON data received"}), 400
+        print("Incoming payload:", data)
 
-        print("Data types:", {k: type(v) for k, v in data.items()})  # Add logging
-
-        # Convert booking_id to integer if it's a string
-        if isinstance(data.get("booking_id"), str):
-            data["booking_id"] = int(data["booking_id"])
-        if isinstance(data.get("guest_id"), str):
-            data["guest_id"] = int(data["guest_id"])
-
-        print("Converted data:", data)  # Add detailed logging
-
+        # Basic validation
         required_fields = ["booking_id", "guest_id", "room_id"]
-        missing_fields = [field for field in required_fields if field not in data]
-        if missing_fields:
-            print(f"Missing fields: {missing_fields}")  # Add detailed logging
-            return jsonify({"code": 400, "message": f"Missing required fields: {', '.join(missing_fields)}"}), 400
+        for field in required_fields:
+            if field not in data:
+                return jsonify({"code": 400, "message": f"Missing field: {field}"}), 400
 
-        # Check if a keycard already exists for this booking
-        existing_keycard = db.session.scalar(db.select(Keycard).filter_by(booking_id=data["booking_id"]))
+        # Check if a keycard already exists
+        existing_keycard = db.session.scalar(
+            db.select(Keycard).filter_by(booking_id=data["booking_id"])
+        )
         if existing_keycard:
-            print(f"Keycard already exists for booking {data['booking_id']}")  # Add detailed logging
-            return jsonify({"code": 200, "data": existing_keycard.json(), "message": "Existing keycard returned"}), 200
+            return jsonify({"code": 400, "message": "Keycard already exists for this booking."}), 400
 
-        # Get the booking information
-        booking_url = environ.get('BOOKING_URL', 'http://localhost:5002')
-        booking_endpoint = f"{booking_url}/booking/{data['booking_id']}"
-        print("Fetching booking from:", booking_endpoint)  # Add logging
-        
-        try:
-            booking_response = requests.get(booking_endpoint)
-            print("Booking response status:", booking_response.status_code)  # Add logging
-            print("Booking response text:", booking_response.text)  # Add logging
-            
-            if booking_response.status_code != 200:
-                return jsonify({"code": 400, "message": f"Invalid booking ID. Booking service returned: {booking_response.text}"}), 400
-            
-            booking_data = booking_response.json()["data"]
-        except requests.RequestException as e:
-            print(f"Request error fetching booking: {str(e)}")
-            return jsonify({"code": 500, "message": f"Error communicating with booking service: {str(e)}"}), 500
-        except Exception as e:
-            print(f"Error processing booking response: {str(e)}")
-            return jsonify({"code": 500, "message": f"Error processing booking data: {str(e)}"}), 500
+        # Get check-out date from booking service
+        booking_url = environ.get("BOOKING_URL", "http://booking:5002")
+        response = requests.get(f"{booking_url}/booking/{data['booking_id']}")
 
-        check_in = booking_data["check_in"]  # Format: YYYY-MM-DD
-        check_out = booking_data["check_out"]  # Format: YYYY-MM-DD
+        if response.status_code != 200:
+            return jsonify({"code": 400, "message": "Invalid booking ID."}), 400
 
-        # Convert to datetime objects
-        check_in = datetime.strptime(check_in, "%Y-%m-%d")
-        check_out = datetime.strptime(check_out, "%Y-%m-%d")
+        booking_data = response.json()["data"]
+        check_out = booking_data.get("check_out") or booking_data.get("check_out_date")
 
-        # Get today's date
-        today = datetime.utcnow().date()
+        if not check_out:
+            return jsonify({"code": 500, "message": "Booking is missing check-out date."}), 500
 
-        # If check-in has not occurred, do not generate keycard
-        # Bypass this check for testing in development environment
-        if environ.get('FLASK_ENV') != 'development' and today < check_in:
-            print(f"Check-in date validation: today={today}, check_in={check_in}")  # Add detailed logging
-            return jsonify({"code": 400, "message": "Guest has not checked in yet."}), 400
+        expires_at = datetime.strptime(check_out, "%Y-%m-%d") + timedelta(hours=15)
 
-        # convert to `expires_at` (Check-Out Date at 3 PM)
-        expires_at = check_out + timedelta(hours=15)  # 3 PM on check-out date
+        new_keycard = Keycard(
+            keycard_id=None,
+            booking_id=data["booking_id"],
+            guest_id=data["guest_id"],
+            room_id=data["room_id"],
+            key_pin=random.randint(0, 999999),
+            issued_at=datetime.utcnow(),
+            expires_at=expires_at
+        )
 
-        # Create a new keycard for the guest
-        try:
-            new_keycard = Keycard(
-                keycard_id=None,  # Let the database auto-generate this
-                booking_id=data["booking_id"],
-                guest_id=data["guest_id"],
-                room_id=data["room_id"],
-                key_pin=random.randint(0, 999999),  # Generate integer PIN
-                issued_at=datetime.utcnow(),
-                expires_at=expires_at
-            )
-            print("Created keycard:", new_keycard.json())  # Add logging
-        except Exception as e:
-            print("Error creating keycard:", str(e))  # Add logging
-            return jsonify({"code": 500, "message": f"Error creating keycard: {str(e)}"}), 500
+        db.session.add(new_keycard)
+        db.session.commit()
 
-        try:
-            db.session.add(new_keycard)
-            db.session.commit()
-            print("Keycard saved to database")  # Add logging
-            return jsonify({"code": 201, "data": new_keycard.json()}), 201
-        except Exception as e:
-            print("Error saving keycard:", str(e))  # Add logging
-            db.session.rollback()
-            return jsonify({"code": 500, "message": f"Error saving keycard: {str(e)}"}), 500
+        return jsonify({"code": 201, "data": new_keycard.json()}), 201
+
     except Exception as e:
-        print("Unexpected error:", str(e))  # Add logging
-        return jsonify({"code": 500, "message": f"Unexpected error: {str(e)}"}), 500
+        import traceback
+        traceback.print_exc()
+        db.session.rollback()
+        return jsonify({"code": 500, "message": f"Failed to generate keycard: {str(e)}"}), 500
+    
 
 # Get pin for booking id (testing purposes)
 @app.route("/keycard/<booking_id>", methods=["GET"])

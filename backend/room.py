@@ -178,5 +178,19 @@ def get_available_rooms():
 
 #     return jsonify({"code": 404, "message": "No available rooms of this type on the selected date."}), 404
 
+@app.route("/room/type/<string:room_type>", methods=["GET"])
+def get_rooms_by_type(room_type):
+    valid_types = ["Single", "Family", "PresidentialSuite"]
+    
+    if room_type not in valid_types:
+        return jsonify({"code": 400, "message": "Invalid room type."}), 400
+
+    rooms = db.session.scalars(db.select(Room).filter_by(room_type=room_type)).all()
+
+    if not rooms:
+        return jsonify({"code": 404, "message": f"No rooms found for type {room_type}."}), 404
+
+    return jsonify({"code": 200, "data": {"rooms": [room.json() for room in rooms]}}), 200
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5008, debug=True)

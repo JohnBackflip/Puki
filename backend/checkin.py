@@ -33,11 +33,11 @@ def self_checkin():
         return jsonify({"code": 400, "message": "Invalid booking ID."}), 400
 
     booking_data = booking_response.get("data", {})
-    guest_id = booking_data.get("guest_id")
+    guest_id = booking_data.get("guest_id") or booking_data.get("customer_id")
     room_id = booking_data.get("room_id")
     check_in = booking_data.get("check_in")
-    floor = booking_data.get("floor")
 
+    # Check-in date validation
     # Check-in date validation
     today = datetime.utcnow().date()
     try:
@@ -45,12 +45,11 @@ def self_checkin():
     except Exception:
         return jsonify({"code": 500, "message": "Invalid check-in date format."}), 500
 
-    # Bypassing check-in date validation for testing purposes
-    # if today != check_in_date:
-    #     return jsonify({
-    #         "code": 400,
-    #         "message": f"Check-in is only allowed on the check-in date ({check_in}). Today is {today.strftime('%Y-%m-%d')}."
-    #     }), 400
+    if today != check_in_date:
+        return jsonify({
+            "code": 400,
+            "message": f"Check-in is only allowed on the check-in date ({check_in_date}). Today is {today}."
+        }), 400
 
     # Verify guest exists
     guest_response = invokes.invoke_http(f"{GUEST_URL}/guest/{guest_id}", method="GET")
@@ -61,52 +60,30 @@ def self_checkin():
     if guest_data.get("name", "").lower() != name.lower():
         return jsonify({"code": 400, "message": "Full name does not match booking record."}), 400
 
-    # Keycard generation
+    # Generate keycard
+    keycard_url = f"{KEYCARD_URL}/keycard"
     keycard_payload = {
         "booking_id": booking_id,
         "guest_id": guest_id,
-        "room_id": room_id,
-        "floor": floor
+        "room_id": room_id
     }
 
-    print(f"Keycard payload: {keycard_payload}")
-
-    # Check if keycard already exists
-    existing_keycard_response = invokes.invoke_http(
-        f"{KEYCARD_URL}/keycard/{booking_id}", method="GET"
-    )
-
-    if existing_keycard_response.get("code") == 200:
-        keycard_data = existing_keycard_response.get("data", {})
-        issued_at = keycard_data.get("issued_at")
-        key_pin = keycard_data.get("key_pin")
-
-        if issued_at == 'None' or key_pin == '00None':
-            # Delete and recreate invalid keycard
-            delete_response = invokes.invoke_http(
-                f"{KEYCARD_URL}/keycard/{booking_id}", method="DELETE"
-            )
-            print(f"Deleted invalid keycard: {delete_response}")
-
-            keycard_response = invokes.invoke_http(
-                f"{KEYCARD_URL}/keycard", json=keycard_payload, method="POST"
-            )
-        else:
-            keycard_response = existing_keycard_response
-    else:
-        keycard_response = invokes.invoke_http(
-            f"{KEYCARD_URL}/keycard", json=keycard_payload, method="POST"
-        )
-
-    print(f"Keycard response: {keycard_response}")
+    keycard_response = invokes.invoke_http(keycard_url, json=keycard_payload, method="POST")
 
     if keycard_response.get("code") not in [200, 201]:
         return jsonify({"code": 500, "message": "Failed to generate keycard."}), 500
 
+    keycard_data = keycard_response.get("data")
+
+    # Update booking status to CHECKED-IN
+    update_booking_url = f"{BOOKING_URL}/bookings/{booking_id}"
+    update_payload = {"status": "CHECKED-IN"}
+    invokes.invoke_http(update_booking_url, json=update_payload, method="PUT")
+
     return jsonify({
         "code": 200,
         "message": "Self check-in successful. Use this PIN to access your room.",
-        "keycard": keycard_response.get("data")
+        "keycard": keycard_data
     }), 200
 
 if __name__ == "__main__":

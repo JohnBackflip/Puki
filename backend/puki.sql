@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS guest (
 CREATE TABLE IF NOT EXISTS room (
     room_id VARCHAR(5) PRIMARY KEY NOT NULL, 
     room_type ENUM('Single', 'Family', 'PresidentialSuite') NOT NULL,
-    key_pin INT UNIQUE,
+    key_pin INT,
     floor INT NOT NULL,
     status ENUM('VACANT', 'OCCUPIED', 'CLEANING') DEFAULT 'VACANT'
 );
