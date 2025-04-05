@@ -2,10 +2,8 @@ import time
 import pika
 from os import environ
 
-hostname = environ.get("host") 
-port = environ.get("port") 
-
-
+# Get RabbitMQ URL from environment variable
+RABBITMQ_URL = environ.get('RABBITMQ_URL', 'amqp://guest:guest@localhost:5672/')
 
 # function to create a connection to the broker
 def create_connection(max_retries=12, retry_interval=5):
@@ -18,16 +16,8 @@ def create_connection(max_retries=12, retry_interval=5):
     while retries < max_retries:
         try:
             print('amqp_connection: Trying connection')
-            # connect to the broker
-            connection = pika.BlockingConnection(pika.ConnectionParameters
-                                (host=hostname, port=port,
-                                 heartbeat=3600, blocked_connection_timeout=3600)) # these parameters to prolong the expiration time (in seconds) of the connection
-                # Note about AMQP connection: various network firewalls, filters, gateways (e.g., SMU VPN on wifi), may hinder the connections;
-                # If "pika.exceptions.AMQPConnectionError" happens, may try again after disconnecting the wifi and/or disabling firewalls.
-                # If see: Stream connection lost: ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None)
-                # - Try: simply re-run the program or refresh the page.
-                # For rare cases, it's incompatibility between RabbitMQ and the machine running it,
-                # - Use the Docker version of RabbitMQ instead: https://www.rabbitmq.com/download.html
+            # connect to the broker using the URL
+            connection = pika.BlockingConnection(pika.URLParameters(RABBITMQ_URL))
             print("amqp_connection: Connection established successfully")
             break  # Connection successful, exit the loop
         except pika.exceptions.AMQPConnectionError as e:

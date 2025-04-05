@@ -8,54 +8,64 @@ from os import environ
 
 app = Flask(__name__)
 CORS(app)
-app.json.sort_keys = False
 
 # Get URLs from environment variables
 ROOM_URL = environ.get('ROOM_URL', 'http://localhost:5008')
 ROSTER_URL = environ.get('ROSTER_URL', 'http://localhost:5009')
 
+# health check
 @app.route("/health")
 def health():
     return {"status": "healthy"}
 
-@app.route("/clean", methods=["POST"])
-def clean_room():
-    data = request.get_json()
-    room_id = data["room_id"]
+# assign housekeeper to room
+@app.route("/housekeeping", methods=["POST"])
+def housekeeping():
+    try:
+        data = request.get_json()
+        room_id = data.get("room_id")
+        floor = data.get("floor")
+        if not room_id or not floor:
+            return jsonify({"code": 400, "message": "room_id and floor are required"}), 400
 
-    # verify room exists
-    room_url = f"{ROOM_URL}/rooms/{room_id}"
-    room_response = invokes.invoke_http(room_url, method="GET")
+        today = datetime.today().strftime("%Y-%m-%d")
 
-    if room_response.get("code") != 200:
-        return jsonify({"code": 400, "message": "Invalid room ID."}), 400
+        # 1. Fetch housekeeper assigned to the floor from Roster
+        roster_response = invokes.invoke_http(
+            f"{ROSTER_URL}/roster/assign",
+            method="GET",
+            params={"date": today, "floor": floor}
+        )
 
-    # get available housekeepers
-    roster_url = f"{ROSTER_URL}/housekeepers/available"
-    roster_response = invokes.invoke_http(roster_url, method="GET")
+        if roster_response.get("code") != 200:
+            return jsonify({"code": 404, "message": "No housekeeper assigned for this floor today."}), 404
 
-    if roster_response.get("code") != 200:
-        return jsonify({"code": 500, "message": "Failed to get available housekeepers."}), 500
+        assigned_housekeeper = roster_response.get("data", {}).get("assigned_housekeeper")
 
-    housekeepers = roster_response.get("data")
-    if not housekeepers:
-        return jsonify({"code": 503, "message": "No housekeepers available at the moment."}), 503
+        # 2. Update room status to CLEANING via Room service
+        room_response = invokes.invoke_http(
+            f"{ROOM_URL}/room/status/{room_id}",
+            method="PUT",
+            json={"status": "CLEANING"}
+        )
 
-    # assign housekeeper
-    housekeeper = housekeepers[0]
-    assign_url = f"{ROSTER_URL}/housekeepers/{housekeeper['id']}/assign"
-    assign_payload = {"room_id": room_id}
-    assign_response = invokes.invoke_http(assign_url, method="POST", json=assign_payload)
+        if room_response.get("code") != 200:
+            return jsonify({"code": 500, "message": "Failed to update room status"}), 500
 
-    if assign_response.get("code") != 200:
-        return jsonify({"code": 500, "message": "Failed to assign housekeeper."}), 500
+        # 3. Simulate cleaning cycle in background
+        thread = threading.Thread(target=simulate_cleaning_cycle, args=(room_id,))
+        thread.start()
 
-    return jsonify({
-        "code": 200,
-        "message": "Housekeeper assigned successfully",
-        "housekeeper": housekeeper
-    }), 200
+        return jsonify({
+            "code": 200,
+            "message": f"Room {room_id} marked for cleaning and assigned to {assigned_housekeeper}",
+            "housekeeper": assigned_housekeeper
+        }), 200
 
+    except Exception as e:
+        return jsonify({"code": 500, "message": f"Unexpected error: {str(e)}"}), 500
+
+# simulate cleaning cycle
 def simulate_cleaning_cycle(room_id):
     # Wait to simulate cleaning (e.g., 10 seconds)
     time.sleep(10)

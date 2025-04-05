@@ -243,6 +243,52 @@
     <script src="js/bootstrap-datepicker.js"></script>
     <script src="js/jquery.timepicker.min.js"></script>
     <script src="js/main.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+          const guestForm = document.getElementById("guestForm");
+      
+          guestForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+      
+            const fullName = document.getElementById("fullName").value;
+            const email = document.getElementById("email").value;
+            const bookingID = document.getElementById("bookingID").value;
+      
+            // Prepare payload
+            const payload = {
+              fullName: fullName,
+              email: email,
+              bookingID: bookingID
+            };
+      
+            fetch("http://localhost:8000/checkin", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(payload)
+            })
+              .then(response => {
+                if (!response.ok) throw new Error("Check-in failed.");
+                return response.json();
+              })
+              .then(data => {
+                console.log("Check-in successful:", data);
+                alert("Check-in successful!");
+      
+                // Optionally store check-in details or redirect
+                localStorage.setItem("checkInSuccess", "true");
+                // window.location.href = "some-confirmation-page.html";
+              })
+              .catch(error => {
+                console.error("Error during check-in:", error);
+                alert("There was an issue with your check-in. Please try again.");
+              });
+          });
+        });
+      </script>
+
 </body>
 
 </html>

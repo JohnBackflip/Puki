@@ -266,36 +266,53 @@
     <script src="js/paymentsummary.js"></script>
     <script src="https://js.stripe.com/v3/"></script>
     <script src="js/payment.js"></script>
+    
     <script>
-        // bookingconfirmation.html script
         document.addEventListener("DOMContentLoaded", function () {
-            // Retrieve the booking details from localStorage
-            const bookingDetails = JSON.parse(localStorage.getItem("bookingDetails"));
-
-            if (bookingDetails) {
-                // Retrieve the check-in and check-out dates from localStorage
-                const checkInDate = localStorage.getItem("checkInDate");
-                const checkOutDate = localStorage.getItem("checkOutDate");
-                const roomType = localStorage.getItem("roomType");
-                const fullName = localStorage.getItem("fullName") || "Not provided";
-                const guestEmail = localStorage.getItem("email") || "Not provided";  // Must match `paymentsummary.js`
-                const guestPhone = localStorage.getItem("phoneNumber") || "Not provided";
-
-                // Populate the confirmation page with booking details
-                document.getElementById("bookingId").textContent = `${bookingDetails.bookingId}`;
-                document.getElementById("checkInDate").textContent = `${checkInDate || "Not specified"}`;
-                document.getElementById("checkOutDate").textContent = `${checkOutDate || "Not specified"}`;
-                document.getElementById("roomType").textContent = `${roomType || "Not specified"}`;
-                document.getElementById("totalCost").textContent = `$${bookingDetails.totalCost}`;
-                document.getElementById("email").textContent = bookingDetails.email || "Not specified";
-                document.getElementById("phoneNumber").textContent = bookingDetails.phoneNumber || "Not specified";
-                document.getElementById("fullName").textContent = bookingDetails.fullName || "Guest";
-            } else {
-                console.warn("No booking details found.");
+            const localData = JSON.parse(localStorage.getItem("bookingDetails"));
+            const bookingId = localData?.bookingId || "unknown";
+        
+            // Local fallback
+            const checkInDate = localStorage.getItem("checkInDate");
+            const checkOutDate = localStorage.getItem("checkOutDate");
+            const roomType = localStorage.getItem("roomType");
+            const fullName = localStorage.getItem("fullName") || "Not provided";
+            const guestEmail = localStorage.getItem("email") || "Not provided";
+            const guestPhone = localStorage.getItem("phoneNumber") || "Not provided";
+        
+            // Fallback population
+            document.getElementById("bookingId").textContent = bookingId;
+            document.getElementById("checkInDate").textContent = checkInDate || "Not specified";
+            document.getElementById("checkOutDate").textContent = checkOutDate || "Not specified";
+            document.getElementById("roomType").textContent = roomType || "Not specified";
+            document.getElementById("totalCost").textContent = localData?.totalCost ? `$${localData.totalCost}` : "N/A";
+            document.getElementById("email").textContent = guestEmail;
+            document.getElementById("phoneNumber").textContent = guestPhone;
+            document.getElementById("fullName").textContent = fullName;
+        
+            // 🔌 Fetch from Kong /booking/:id if bookingId exists
+            if (bookingId && bookingId !== "unknown") {
+                fetch(`http://localhost:8000/booking/${bookingId}`)
+                    .then(response => {
+                        if (!response.ok) throw new Error("Booking not found");
+                        return response.json();
+                    })
+                    .then(data => {
+                        document.getElementById("bookingId").textContent = data.bookingId || bookingId;
+                        document.getElementById("checkInDate").textContent = data.checkInDate || checkInDate;
+                        document.getElementById("checkOutDate").textContent = data.checkOutDate || checkOutDate;
+                        document.getElementById("roomType").textContent = data.roomType || roomType;
+                        document.getElementById("totalCost").textContent = data.totalCost ? `$${data.totalCost}` : "N/A";
+                        document.getElementById("email").textContent = data.email || guestEmail;
+                        document.getElementById("phoneNumber").textContent = data.phoneNumber || guestPhone;
+                        document.getElementById("fullName").textContent = data.fullName || fullName;
+                    })
+                    .catch(err => {
+                        console.warn("Using local booking data due to error:", err.message);
+                    });
             }
         });
-
-    </script>
+        </script>
 
 </body>
 

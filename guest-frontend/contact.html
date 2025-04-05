@@ -212,14 +212,43 @@
     <script src="js/jquery.stellar.min.js"></script>
     <script src="js/jquery.fancybox.min.js"></script>
     
-    
     <script src="js/aos.js"></script>
-    
     <script src="js/bootstrap-datepicker.js"></script> 
     <script src="js/jquery.timepicker.min.js"></script> 
-
-    
-
     <script src="js/main.js"></script>
+
+    <script>
+      const contactForm = document.querySelector('form');
+      contactForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        const name = document.getElementById('name').value;
+        const phone = document.getElementById('phone').value;
+        const email = document.getElementById('email').value;
+        const message = document.getElementById('message').value;
+
+        // Send contact form data to the backend
+        fetch('http://localhost:8000/contact', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: name,
+            phone: phone,
+            email: email,
+            message: message
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Message sent successfully:', data);
+          // Redirect or show confirmation
+        })
+        .catch(error => console.error('Error sending message:', error));
+      });
+
+    </script>
+
   </body>
 </html>

@@ -40,30 +40,23 @@ def health():
     return {"status": "healthy"}
 
 #get all guests
-@app.route("/guests", methods=["GET"])
+@app.route("/guest", methods=["GET"])
 def get_all():
-    guest_list = db.session.scalars(db.select(Guest)).all()
-    if len(guest_list) > 0: 
-        return jsonify({"code": 200, "data": {"guests": [g.json() for g in guest_list]}}), 200
+    guest = db.session.execute(db.select(Guest)).scalars().all()
+    if len(guest) > 0: 
+        return jsonify({"code": 200, "data": {"guests": [g.json() for g in guest]}}), 200
     else:
         return jsonify({"code": 404, "message": "No guests found."}), 404
 
 # get specific guest by ID
-@app.route("/guests/<int:guest_id>", methods=["GET"])
+@app.route("/guest/<int:guest_id>", methods=["GET"])
 def get_guest(guest_id):
-    guest = db.session.scalar(db.select(Guest).filter_by(guest_id=guest_id).limit(1)).first()
+    guest = db.session.scalar(db.select(Guest).filter_by(guest_id=guest_id))
     
     if guest:
         return jsonify({"code": 200, "data": guest.json()}), 200
     
     return jsonify({"code": 404, "message": "Guest not found."}), 404
-
-#postman example 
-#  {
-#     "name": "John Doe",
-#     "email": "john.doe@example.com",
-#     "contact": "91234567"
-#  }
 
 #create guests
 @app.route("/createGuest", methods=["POST"])
@@ -81,7 +74,7 @@ def create_guest():
         return jsonify({"code": 500, "data": {"guest_id": guest.guest_id}, "message": f"Error creating guest. "}), 500
 
 #update guest
-@app.route("/guests/<int:guest_id>", methods=['PUT'])
+@app.route("/guest/<int:guest_id>", methods=['PUT'])
 def update_guest(guest_id):
     guest = db.session.scalars(db.select(Guest).filter_by(guest_id=guest_id).limit(1)).first()
     if guest:
@@ -98,7 +91,7 @@ def update_guest(guest_id):
     return jsonify({"code": 404, "message": "Guest not found."}), 404
     
 #delete guest
-@app.route("/guests/<int:guest_id>", methods=['DELETE'])
+@app.route("/guest/<int:guest_id>", methods=['DELETE'])
 def delete_guest(guest_id):
     guest = db.session.scalars(db.select(Guest).filter_by(guest_id=guest_id).limit(1)).first()
     if guest:

@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+        }
+        
+        .login-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f5f5f5;
+        }
+        
+        .login-form {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
+        
+        .login-form h1 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background-color: #45a049;
+        }
+        
+        .error-message {
+            color: red;
+            margin-top: 1rem;
+            text-align: center;
+        }
+        
+        .admin-container {
+            display: none;
+        }
+        
+        .navbar {
+            background-color: #333;
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        
+        .nav-links {
+            display: flex;
+        }
+        
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            margin-left: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .nav-link.active {
+            background-color: #4CAF50;
+        }
+        
+        .admin-content {
+            padding: 2rem;
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card h2 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        .form-row {
+            display: flex;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        
+        table th {
+            background-color: #f2f2f2;
+        }
+        
+        .action-btn {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            margin-right: 0.5rem;
+            color: #333;
+        }
+        
+        .action-btn.edit {
+            color: #2196F3;
+        }
+        
+        .action-btn.delete {
+            color: #f44336;
+        }
+        
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .calendar-nav {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .calendar-nav button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .calendar-day {
+            border: 1px solid #ddd;
+            padding: 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .calendar-day-header {
+            text-align: center;
+            font-weight: bold;
+            padding: 0.5rem;
+            background-color: #f2f2f2;
+            border: 1px solid #ddd;
+        }
+        
+        .calendar-day.has-promo {
+            background-color: rgba(76, 175, 80, 0.1);
+        }
+        
+        .calendar-day.booked {
+            background-color: rgba(244, 67, 54, 0.1);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+        
+        .badge.single {
+            background-color: #2196F3;
+            color: white;
+        }
+        
+        .badge.double {
+            background-color: #9C27B0;
+            color: white;
+        }
+        
+        .badge.family {
+            background-color: #FF9800;
+            color: white;
+        }
+        
+        .badge.promo {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .room-status {
+            margin-top: auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+        
+        .logout-btn {
+            background-color: transparent;
+            color: white;
+            border: 1px solid white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .logout-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .room-details-modal .modal-content {
+            max-width: 800px;
+        }
+        
+        .room-details-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .room-card {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 1rem;
+        }
+        
+        .room-card.booked {
+            background-color: rgba(244, 67, 54, 0.1);
+        }
+        
+        .room-card h4 {
+            margin-bottom: 0.5rem;
+        }
+        
+        .shift-select {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+        
+        .shift-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container" id="login-container">
+        <div class="login-form">
+            <h1>Hotel Admin Login</h1>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password">
+            </div>
+            <button class="btn" id="login-btn">Login</button>
+            <p class="error-message" id="login-error"></p>
+        </div>
+    </div>
+
+    <div class="admin-container" id="admin-container">
+        <nav class="navbar">
+            <h1>Hotel Admin Panel</h1>
+            <div class="nav-links">
+                <a class="nav-link active" data-page="promotion-page">Promotions</a>
+                <a class="nav-link" data-page="availability-page">Room Availability</a>
+                <a class="nav-link" data-page="roster-page">Roster</a>
+                <button class="logout-btn" id="logout-btn">Logout</button>
+            </div>
+        </nav>
+
+        <div class="admin-content">
+            <div class="page active" id="promotion-page">
+                <div class="card">
+                    <h2>Add New Promotion</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="promo-name">Promotion Name</label>
+                            <input type="text" id="promo-name" name="promo-name" placeholder="Early Bird Discount">
+                        </div>
+                        <div class="form-group">
+                            <label for="promo-code">Promotion Code</label>
+                            <input type="text" id="promo-code" name="promo-code" placeholder="EARLY25">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="promo-start">Start Date</label>
+                            <input type="date" id="promo-start" name="promo-start">
+                        </div>
+                        <div class="form-group">
+                            <label for="promo-end">End Date</label>
+                            <input type="date" id="promo-end" name="promo-end">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="promo-discount">Discount (%)</label>
+                            <input type="number" id="promo-discount" name="promo-discount" placeholder="25">
+                        </div>
+                        <div class="form-group">
+                            <label for="promo-room-type">Room Type</label>
+                            <select id="promo-room-type" name="promo-room-type">
+                                <option value="all">All Rooms</option>
+                                <option value="single">Single</option>
+                                <option value="double">Double</option>
+                                <option value="family">Family</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn" id="add-promo-btn">Add Promotion</button>
+                </div>
+
+                <div class="card">
+                    <h2>Current Promotions</h2>
+                    <table id="promotions-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Code</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Discount</th>
+                                <th>Room Type</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="page" id="availability-page">
+                <div class="card">
+                    <h2>Room Availability</h2>
+                    <div class="calendar-header">
+                        <h3 id="availability-current-month"></h3>
+                        <div class="calendar-nav">
+                            <button id="availability-prev-month">< Previous</button>
+                            <button id="availability-next-month">Next ></button>
+                        </div>
+                    </div>
+                    <div class="calendar" id="availability-calendar"></div>
+                    <div id="room-details" class="room-details hidden">
+                        <h3>Room Details for <span id="availability-selected-date"></span></h3>
+                        <div id="room-types">
+                            <div class="room-type">
+                                <label>Single Rooms:</label>
+                                <input type="number" id="single-count" value="0" />
+                            </div>
+                            <div class="room-type">
+                                <label>Double Rooms:</label>
+                                <input type="number" id="double-count" value="0" />
+                            </div>
+                            <div class="room-type">
+                                <label>Family Rooms:</label>
+                                <input type="number" id="family-count" value="0" />
+                            </div>
+                        </div>
+                        <button id="save-changes">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page" id="roster-page">
+                <div class="card">
+                    <h2 style="text-align: center;">Housekeeping Roster</h2>
+                    <div class="roster-header" style="justify-content: center;">
+                        <h3 id="roster-current-date"></h3>
+                    </div>
+                    <table id="roster-table">
+                        <thead>
+                            <tr>
+                                <th>Floor</th>
+                                <th>Cleaner</th>
+                                <th>Rooms</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <div class="calendar-nav" style="margin-top: 20px; text-align: center;">
+                        <button id="roster-prev-day">< Previous Day</button>
+                        <button id="roster-next-day">Next Day ></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Login functionality
+            document.getElementById("login-btn").addEventListener("click", function() {
+                const email = document.getElementById("email").value;
+                const password = document.getElementById("password").value;
+                const correctEmail = "admin@puki.com";
+                const correctPassword = "pw";
+
+                if (email === correctEmail && password === correctPassword) {
+                    document.getElementById("login-container").style.display = "none";
+                    document.getElementById("admin-container").style.display = "block";
+                } else {
+                    document.getElementById("login-error").textContent = "Invalid email or password!";
+                }
+            });
+
+            // Navigation
+            document.addEventListener("DOMContentLoaded", function() {
+                const navLinks = document.querySelectorAll('.nav-link');
+                const pages = document.querySelectorAll('.page');
+
+                navLinks.forEach(link => {
+                    link.addEventListener('click', function(event) {
+                        event.preventDefault();
+                        navLinks.forEach(link => link.classList.remove('active'));
+                        pages.forEach(page => page.classList.remove('active'));
+                        link.classList.add('active');
+                        const pageId = link.getAttribute('data-page');
+                        document.getElementById(pageId).classList.add('active');
+                    });
+                });
+            });
+
+            // 1. Save Promotions to Backend
+            document.getElementById("add-promo-btn").addEventListener("click", function() {
+                const promoData = {
+                    name: document.getElementById("promo-name").value,
+                    code: document.getElementById("promo-code").value,
+                    start_date: document.getElementById("promo-start").value,
+                    end_date: document.getElementById("promo-end").value,
+                    discount: parseFloat(document.getElementById("promo-discount").value),
+                    room_type: document.getElementById("promo-room-type").value
+                };
+
+                if (!promoData.name || !promoData.code || !promoData.start_date || !promoData.end_date || isNaN(promoData.discount)) {
+                    alert("Please fill in all fields.");
+                    return;
+                }
+
+                fetch("http://localhost:8000/price/events", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(promoData)
+                })
+                .then(res => res.json())
+                .then(response => {
+                    if (response.code === 201) {
+                        alert("✅ Promotion added!");
+                        location.reload();
+                    } else {
+                        alert("❌ Failed to add promotion: " + response.message);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("An error occurred while saving the promotion.");
+                });
+            });
+
+            // 2. Fetch Promotions on Page Load
+            document.addEventListener("DOMContentLoaded", function () {
+                fetch("http://localhost:8000/price/events")
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.code === 200 && Array.isArray(data.data.promotions)) {
+                            const tableBody = document.getElementById("promotions-table").getElementsByTagName("tbody")[0];
+                            tableBody.innerHTML = "";
+
+                            data.data.promotions.forEach(promo => {
+                                const row = tableBody.insertRow();
+                                row.innerHTML = `
+                                    <td>${promo.name}</td>
+                                    <td>${promo.code}</td>
+                                    <td>${promo.start_date}</td>
+                                    <td>${promo.end_date}</td>
+                                    <td>${promo.discount}%</td>
+                                    <td>${promo.room_type}</td>
+                                    <td>
+                                        <button class="action-btn edit">Edit</button>
+                                        <button class="action-btn delete">Delete</button>
+                                    </td>
+                                `;
+                            });
+                        }
+                    })
+                    .catch(error => console.error("Failed to load promotions:", error));
+            });
+
+            // Room Availability
+            let roomAvailability = {
+                "2025-04-04": { single: 5, double: 3, family: 2 },
+                "2025-04-06": { single: 4, double: 2, family: 1 },
+                "2025-04-07": { single: 3, double: 4, family: 3 },
+                "2025-04-08": { single: 2, double: 1, family: 0 },
+                "2025-03-20": { single: 1, double: 0, family: 0 }
+            };
+
+            function generateAvailabilityCalendar(year, month) {
+                const calendar = document.getElementById('availability-calendar');
+                calendar.innerHTML = '';
+                const firstDay = new Date(year, month, 1);
+                const firstDayOfWeek = firstDay.getDay();
+                const lastDay = new Date(year, month + 1, 0).getDate();
+
+                let day = 1;
+                for (let i = 0; i < 6; i++) {
+                    for (let j = 0; j < 7; j++) {
+                        const dayCell = document.createElement('div');
+                        dayCell.className = 'calendar-day';
+
+                        if (i === 0 && j < firstDayOfWeek) {
+                            dayCell.textContent = '';
+                        } else if (day > lastDay) {
+                            dayCell.textContent = '';
+                        } else {
+                            dayCell.textContent = day;
+                            const currentDay = day;
+                            dayCell.addEventListener('click', () => {
+                                showRoomDetails(year, month, currentDay);
+                            });
+                            day++;
+                        }
+                        calendar.appendChild(dayCell);
+                    }
+                }
+            }
+
+            function showRoomDetails(year, month, day) {
+                const selectedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const roomDetails = document.getElementById('room-details');
+                roomDetails.classList.remove('hidden');
+                document.getElementById('availability-selected-date').textContent = selectedDate;
+
+                if (roomAvailability[selectedDate]) {
+                    document.getElementById('single-count').value = roomAvailability[selectedDate].single;
+                    document.getElementById('double-count').value = roomAvailability[selectedDate].double;
+                    document.getElementById('family-count').value = roomAvailability[selectedDate].family;
+                } else {
+                    document.getElementById('single-count').value = 0;
+                    document.getElementById('double-count').value = 0;
+                    document.getElementById('family-count').value = 0;
+                }
+            }
+
+            // 3. Save Room Availability
+            document.getElementById('save-changes').addEventListener('click', () => {
+                const selectedDate = document.getElementById('availability-selected-date').textContent;
+                const singleCount = parseInt(document.getElementById('single-count').value);
+                const doubleCount = parseInt(document.getElementById('double-count').value);
+                const familyCount = parseInt(document.getElementById('family-count').value);
+
+                const payload = {
+                    date: selectedDate,
+                    availability: {
+                        single: singleCount,
+                        double: doubleCount,
+                        family: familyCount
+                    }
+                };
+
+                fetch("http://localhost:8000/room/available", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(res => res.json())
+                .then(response => {
+                    if (response.code === 200) {
+                        alert("✅ Room availability updated.");
+                        roomAvailability[selectedDate] = {
+                            single: singleCount,
+                            double: doubleCount,
+                            family: familyCount
+                        };
+                    } else {
+                        alert("❌ Failed to update availability.");
+                    }
+                })
+                .catch(err => console.error("Error updating availability:", err));
+            });
+
+            // Initialize calendar
+            let availabilityYear = new Date().getFullYear();
+            let availabilityMonth = new Date().getMonth();
+            document.getElementById('availability-current-month').textContent = `${new Date(availabilityYear, availabilityMonth).toLocaleString('default', { month: 'long' })} ${availabilityYear}`;
+            generateAvailabilityCalendar(availabilityYear, availabilityMonth);
+
+            document.getElementById('availability-prev-month').addEventListener('click', () => {
+                if (availabilityMonth === 0) {
+                    availabilityMonth = 11;
+                    availabilityYear--;
+                } else {
+                    availabilityMonth--;
+                }
+                document.getElementById('availability-current-month').textContent = `${new Date(availabilityYear, availabilityMonth).toLocaleString('default', { month: 'long' })} ${availabilityYear}`;
+                generateAvailabilityCalendar(availabilityYear, availabilityMonth);
+            });
+
+            document.getElementById('availability-next-month').addEventListener('click', () => {
+                if (availabilityMonth === 11) {
+                    availabilityMonth = 0;
+                    availabilityYear++;
+                } else {
+                    availabilityMonth++;
+                }
+                document.getElementById('availability-current-month').textContent = `${new Date(availabilityYear, availabilityMonth).toLocaleString('default', { month: 'long' })} ${availabilityYear}`;
+                generateAvailabilityCalendar(availabilityYear, availabilityMonth);
+            });
+
+            // Roster
+            document.addEventListener("DOMContentLoaded", function () {
+                let currentDate = new Date();
+                const rosterTableBody = document.querySelector("#roster-table tbody");
+
+                function formatDate(date) {
+                    return date.toISOString().split("T")[0];
+                }
+
+                function updateRosterView(date) {
+                    const formattedDate = formatDate(date);
+                    document.getElementById("roster-current-date").textContent = date.toDateString();
+                    rosterTableBody.innerHTML = "";
+
+                    fetch(`http://localhost:4001/roster/${formattedDate}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(rosterData => {
+                        if (rosterData.code === 200) {
+                            const rosterEntries = rosterData.data.roster;
+                            if (rosterEntries.length > 0) {
+                                rosterEntries.forEach(entry => {
+                                    const row = document.createElement("tr");
+                                    row.innerHTML = `
+                                        <td>Level ${entry.floor}</td>
+                                        <td>${entry.assigned_housekeeper}</td>
+                                        <td>${entry.rooms.map(room => `<span class="room-highlight">${room}</span>`).join(", ")}</td>
+                                    `;
+                                    rosterTableBody.appendChild(row);
+                                });
+                            } else {
+                                const row = document.createElement("tr");
+                                row.innerHTML = `<td colspan="3">No roster data available for this day.</td>`;
+                                rosterTableBody.appendChild(row);
+                            }
+                        }
+                    })
+                    .catch(error => console.error("Error fetching roster:", error));
+                }
+
+                document.getElementById("roster-prev-day").addEventListener("click", () => {
+                    currentDate.setDate(currentDate.getDate() - 1);
+                    updateRosterView(currentDate);
+                });
+
+                document.getElementById("roster-next-day").addEventListener("click", () => {
+                    currentDate.setDate(currentDate.getDate() + 1);
+                    updateRosterView(currentDate);
+                });
+
+                updateRosterView(currentDate);
+            });
+        </script>
+
+        <style>
+            .calendar-day.empty { background-color: #f0f0f0; }
+            .room-details { margin-top: 20px; }
+            .room-type { margin-bottom: 10px; }
+            .hidden { display: none; }
+            .room-highlight { background-color: #ffcccb; }
+        </style>
+    </div>
+</body>
+</html>

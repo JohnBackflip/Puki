@@ -272,6 +272,64 @@
     <script src="js/main.js"></script>
     <!-- <script src="js/payment.js"></script> -->
     
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+          const buttons = document.querySelectorAll(".btn-show-rates");
+      
+          buttons.forEach((button) => {
+            button.addEventListener("click", () => {
+              const roomType = button.dataset.description;
+              const amount = button.dataset.amount;
+      
+              // Dummy data - replace with real values from user inputs or storage
+              const checkInDate = localStorage.getItem("checkInDate") || "2025-05-01";
+              const checkOutDate = localStorage.getItem("checkOutDate") || "2025-05-05";
+              const fullName = localStorage.getItem("fullName") || "John Doe";
+              const email = localStorage.getItem("email") || "john@example.com";
+              const phoneNumber = localStorage.getItem("phoneNumber") || "91234567";
+      
+              const bookingPayload = {
+                checkInDate,
+                checkOutDate,
+                roomType,
+                totalCost: amount,
+                fullName,
+                email,
+                phoneNumber
+              };
+      
+              fetch("http://localhost:8000/booking", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify(bookingPayload)
+              })
+              .then(response => response.json())
+              .then(data => {
+                console.log("Booking successful:", data);
+                
+                // Save details for confirmation page
+                localStorage.setItem("bookingDetails", JSON.stringify(data));
+                localStorage.setItem("roomType", roomType);
+                localStorage.setItem("checkInDate", checkInDate);
+                localStorage.setItem("checkOutDate", checkOutDate);
+                localStorage.setItem("fullName", fullName);
+                localStorage.setItem("email", email);
+                localStorage.setItem("phoneNumber", phoneNumber);
+      
+                // Redirect to confirmation page
+                window.location.href = "bookingconfirmation.html";
+              })
+              .catch(err => {
+                console.error("Error booking room:", err);
+                alert("Oops! Something went wrong while booking.");
+              });
+            });
+          });
+        });
+      </script>
+      
 </body>
 
 </html>
