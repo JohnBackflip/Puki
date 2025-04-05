@@ -47,6 +47,8 @@ CREATE TABLE IF NOT EXISTS keycard (
     FOREIGN KEY (room_id) REFERENCES room(room_id) ON DELETE CASCADE
 );
 
+-- Create the 'housekeeper' table
+ALTER TABLE room ADD INDEX (floor);
 CREATE TABLE IF NOT EXISTS housekeeper (
     housekeeper_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
@@ -86,14 +88,6 @@ INSERT INTO guest (name, email, contact) VALUES
 ('Isabella Harris', 'isabella@example.com', '1231117897'),
 ('Liam Clark', 'liam@example.com', '1232227898'),
 ('Ella Young', 'ella@example.com', '1233337899');
-
--- Insert data into housekeeper
-INSERT INTO housekeeper (housekeeper_id, name, floor) VALUES
-(1, 'John Smith', 1),
-(2, 'Sarah Johnson', 1),
-(3, 'Michael White', 2),
-(4, 'Linda Green', 2),
-(5, 'David Black', 2);
 
 -- Insert data into room
 INSERT INTO room (room_id, room_type, key_pin, floor, status) VALUES
@@ -138,6 +132,14 @@ INSERT INTO roster (date, floor, room_id, housekeeper_id, name, completed) VALUE
 ('2025-04-08', 3, '302', 8, 'Isabella Lewis', FALSE),
 ('2025-04-09', 4, '401', 9, 'George Young', FALSE),
 ('2025-04-10', 4, '402', 10, 'Oliver Clark', FALSE);
+
+-- Insert data into housekeeper
+INSERT INTO housekeeper (housekeeper_id, name, floor) VALUES
+(1, 'John Smith', 1),
+(2, 'Sarah Johnson', 1),
+(3, 'Michael White', 2),
+(4, 'Linda Green', 2),
+(5, 'David Black', 2);
 
 -- Insert data into price
 INSERT INTO price (room_id, floor, room_type, price) VALUES

@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from os import environ
+import traceback
 
 app = Flask(__name__)
 CORS(app)
@@ -62,6 +63,7 @@ def get_guest(guest_id):
 @app.route("/createGuest", methods=["POST"])
 def create_guest():
     data = request.get_json()
+    print("Received guest data:", data)
 
     try:
         guest = Guest(**data)
@@ -71,7 +73,9 @@ def create_guest():
         return jsonify({"code": 201, "data": guest.json()}), 201, {"Location": f"/guests/{guest.guest_id}"}
     except:
         db.session.rollback()
-        return jsonify({"code": 500, "data": {"guest_id": guest.guest_id}, "message": f"Error creating guest. "}), 500
+        print("Error while creating guest:", str(e))
+        traceback.print_exc()  # ← this prints full stack trace in logs
+        return jsonify({"code": 500, "message": "Error creating guest."}), 500
 
 #update guest
 @app.route("/guest/<int:guest_id>", methods=['PUT'])

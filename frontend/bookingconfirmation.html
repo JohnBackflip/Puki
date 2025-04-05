@@ -268,51 +268,48 @@
     <script src="js/payment.js"></script>
     
     <script>
+        const BOOKING_URL = "http://localhost:5002";
+        const GUEST_URL = "http://localhost:5011";
+
+
         document.addEventListener("DOMContentLoaded", function () {
-            const localData = JSON.parse(localStorage.getItem("bookingDetails"));
-            const bookingId = localData?.bookingId || "unknown";
-        
-            // Local fallback
-            const checkInDate = localStorage.getItem("checkInDate");
-            const checkOutDate = localStorage.getItem("checkOutDate");
-            const roomType = localStorage.getItem("roomType");
-            const fullName = localStorage.getItem("fullName") || "Not provided";
-            const guestEmail = localStorage.getItem("email") || "Not provided";
-            const guestPhone = localStorage.getItem("phoneNumber") || "Not provided";
-        
-            // Fallback population
-            document.getElementById("bookingId").textContent = bookingId;
-            document.getElementById("checkInDate").textContent = checkInDate || "Not specified";
-            document.getElementById("checkOutDate").textContent = checkOutDate || "Not specified";
-            document.getElementById("roomType").textContent = roomType || "Not specified";
-            document.getElementById("totalCost").textContent = localData?.totalCost ? `$${localData.totalCost}` : "N/A";
-            document.getElementById("email").textContent = guestEmail;
-            document.getElementById("phoneNumber").textContent = guestPhone;
-            document.getElementById("fullName").textContent = fullName;
-        
-            // 🔌 Fetch from Kong /booking/:id if bookingId exists
-            if (bookingId && bookingId !== "unknown") {
-                fetch(`http://localhost:8000/booking/${bookingId}`)
-                    .then(response => {
-                        if (!response.ok) throw new Error("Booking not found");
-                        return response.json();
-                    })
-                    .then(data => {
-                        document.getElementById("bookingId").textContent = data.bookingId || bookingId;
-                        document.getElementById("checkInDate").textContent = data.checkInDate || checkInDate;
-                        document.getElementById("checkOutDate").textContent = data.checkOutDate || checkOutDate;
-                        document.getElementById("roomType").textContent = data.roomType || roomType;
-                        document.getElementById("totalCost").textContent = data.totalCost ? `$${data.totalCost}` : "N/A";
-                        document.getElementById("email").textContent = data.email || guestEmail;
-                        document.getElementById("phoneNumber").textContent = data.phoneNumber || guestPhone;
-                        document.getElementById("fullName").textContent = data.fullName || fullName;
-                    })
-                    .catch(err => {
-                        console.warn("Using local booking data due to error:", err.message);
-                    });
-            }
-        });
+        const bookingId = JSON.parse(localStorage.getItem("bookingDetails"))?.bookingId;
+
+        if (!bookingId) {
+            console.warn("No booking ID found in localStorage.");
+            return;
+        }
+
+        fetch(`http://localhost:5002/booking/${bookingId}`)
+            .then(res => {
+                if (!res.ok) throw new Error("Booking fetch failed");
+                return res.json();
+            })
+            .then(async bookingData => {
+                const booking = bookingData.data;
+
+                document.getElementById("bookingId").textContent = booking.booking_id;
+                document.getElementById("checkInDate").textContent = booking.check_in;
+                document.getElementById("checkOutDate").textContent = booking.check_out;
+                document.getElementById("roomType").textContent = booking.room_type;
+                document.getElementById("totalCost").textContent = `$${booking.price}`;
+
+                // Fetch guest data
+                const guestRes = await fetch(`http://localhost:5011/guest/${booking.guest_id}`);
+                if (!guestRes.ok) throw new Error("Guest fetch failed");
+                const guestData = await guestRes.json();
+                const guest = guestData.data;
+
+                document.getElementById("fullName").textContent = guest.name;
+                document.getElementById("email").textContent = guest.email;
+                document.getElementById("phoneNumber").textContent = guest.contact;
+            })
+            .catch(err => {
+                console.error("Error fetching confirmation data:", err.message);
+            });
+    });
         </script>
+        
 
 </body>
 

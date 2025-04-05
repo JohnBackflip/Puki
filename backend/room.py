@@ -113,70 +113,52 @@ def update_room_status(room_id):
         db.session.rollback()
         return jsonify({"code": 500, "message": str(e)}), 500
 
-# API to get available rooms
-@app.route("/room/available", methods=["GET"])
-def get_available_rooms():
+#next avai rooms
+@app.route("/room/next-available/<string:room_type>", methods=["GET"])
+def get_next_available_room(room_type):
     date_str = request.args.get("date")
-    room_type = request.args.get("room_type")
 
     if not date_str:
-        return jsonify({"code": 400, "message": "Date is required."}), 400
+        return jsonify({"code": 400, "message": "Date is required as query param."}), 400
 
-    check_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+    try:
+        check_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        return jsonify({"code": 400, "message": "Invalid date format. Use YYYY-MM-DD."}), 400
 
-    # Get vacant rooms directly from database
-    query = db.select(Room).filter_by(status="VACANT")
-    if room_type:
-        query = query.filter_by(room_type=room_type)
-    
-    vacant_rooms = db.session.scalars(query).all()
+    # Get vacant rooms of the requested type
+    vacant_rooms = db.session.scalars(
+        db.select(Room).filter_by(status="VACANT", room_type=room_type)
+    ).all()
 
     if not vacant_rooms:
-        return jsonify({"code": 404, "message": "No vacant rooms available."}), 404
+        return jsonify({"code": 404, "message": "No vacant rooms of this type."}), 404
 
     booking_url = environ.get("BOOKING_URL", "http://booking:5002")
-    final_available_rooms = []
 
     for room in vacant_rooms:
         booking_check_url = f"{booking_url}/booking?room_id={room.room_id}&date={date_str}"
         try:
             booking_response = requests.get(booking_check_url)
             if booking_response.status_code == 404:
-                final_available_rooms.append(room.json())
-        except requests.exceptions.RequestException:
+                # This room is free on the given date
+                return jsonify({
+                    "code": 200,
+                    "data": {
+                        "room_id": room.room_id,
+                        "floor": room.floor,
+                        "room_type": room.room_type
+                    }
+                }), 200
+        except requests.exceptions.RequestException as e:
+            print(f"Booking service request failed: {e}")
             continue
 
-    return jsonify({"code": 200, "data": {"rooms": final_available_rooms}}) if final_available_rooms else jsonify({"code": 404, "message": "No available rooms on this date."}), 404
+    return jsonify({
+        "code": 404,
+        "message": f"No {room_type} rooms available on {date_str}."
+    }), 404
 
-# Room availability management
-# @app.route("/room/next-available/<string:room_type>", methods=["GET"])
-# def get_next_available_room(room_type):
-#     date_str = request.args.get("date")
-#     if not date_str:
-#         return jsonify({"code": 400, "message": "Date is required."}), 400
-    
-#     check_date = datetime.strptime(date_str, "%Y-%m-%d").date()
-
-#     # Get vacant rooms directly from database
-#     vacant_rooms = db.session.scalars(
-#         db.select(Room).filter_by(status="VACANT", room_type=room_type)
-#     ).all()
-
-#     if not vacant_rooms:
-#         return jsonify({"code": 404, "message": "No vacant rooms of this type."}), 404
-
-#     booking_url = environ.get("BOOKING_URL", "http://booking:5002")
-    
-#     for room in vacant_rooms:
-#         booking_check_url = f"{booking_url}/booking?room_id={room.room_id}&date={date_str}"
-#         try:
-#             booking_response = requests.get(booking_check_url)
-#             if booking_response.status_code == 404:
-#                 return jsonify({"code": 200, "data": room.json()}), 200
-#         except requests.exceptions.RequestException:
-#             continue
-
-#     return jsonify({"code": 404, "message": "No available rooms of this type on the selected date."}), 404
 
 @app.route("/room/type/<string:room_type>", methods=["GET"])
 def get_rooms_by_type(room_type):

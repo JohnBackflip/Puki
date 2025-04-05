@@ -103,6 +103,15 @@ services:
     depends_on:
       - prometheus
 
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    networks:
+      - puki-network
+
   ###################################
   #1 Room: The Room microservice
   ###################################
@@ -117,7 +126,7 @@ services:
     environment:
       - DATABASE_URL=mysql+mysqlconnector://root@host.docker.internal:3306/puki
       - ROOM_URL=http://room:5008
-      - BOOKING_URL=http://booking:8000
+      - BOOKING_URL=http://booking:5002
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5008/health"]
       interval: 10s
@@ -198,7 +207,7 @@ services:
     networks:
       - puki-network
     environment:
-      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
+      - DATABASE_URL=mysql+mysqlconnector://root@host.docker.internal:3306/puki
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5014/health"]
       interval: 10s
