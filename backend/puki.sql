@@ -33,15 +33,18 @@ CREATE TABLE IF NOT EXISTS booking (
     FOREIGN KEY (room_id) REFERENCES room(room_id) ON DELETE SET NULL
 );
 
--- Keycard table
+-- Create the 'keycard' table
 CREATE TABLE IF NOT EXISTS keycard (
     keycard_id INT AUTO_INCREMENT PRIMARY KEY,
     booking_id INT NOT NULL UNIQUE, 
     guest_id INT NOT NULL, 
-    issued_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP NOT NULL,
+    room_id VARCHAR(5) NOT NULL,
+    key_pin INT(6) UNIQUE NULL,  
+    issued_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+    expires_at TIMESTAMP NULL, 
     FOREIGN KEY (booking_id) REFERENCES booking(booking_id) ON DELETE CASCADE,
-    FOREIGN KEY (guest_id) REFERENCES guest(guest_id) ON DELETE CASCADE
+    FOREIGN KEY (guest_id) REFERENCES guest(guest_id) ON DELETE CASCADE,
+    FOREIGN KEY (room_id) REFERENCES room(room_id) ON DELETE CASCADE
 );
 
 -- Roster table
@@ -59,9 +62,9 @@ CREATE TABLE IF NOT EXISTS roster (
 -- Price table
 CREATE TABLE IF NOT EXISTS price (
     room_id VARCHAR(5) PRIMARY KEY NOT NULL,
-    price DECIMAL(10, 2) NOT NULL,
     floor INT NOT NULL,
-    room_type ENUM('Single', 'Family', 'PresidentialSuite') NOT NULL
+    room_type ENUM('Single', 'Family', 'PresidentialSuite') NOT NULL,
+    price DECIMAL(10, 2) NOT NULL
 );
 
 -- Insert data into guest
@@ -103,10 +106,10 @@ INSERT INTO booking (guest_id, room_id, floor, check_in, check_out, room_type, p
 (9, NULL, NULL, '2025-04-11', '2025-04-13', 'PresidentialSuite', 500.00),
 (10, NULL, NULL, '2025-04-12', '2025-04-14', 'Single', 100.00);
 
--- Insert data into keycard (only for checked-in guests)
-INSERT INTO keycard (booking_id, guest_id, issued_at, expires_at) VALUES
-(1, 1, '2025-04-03 10:00:00', '2025-04-05 10:00:00'),
-(2, 2, '2025-04-04 10:00:00', '2025-04-06 10:00:00');
+-- Inserting data into 'keycard' table
+INSERT INTO keycard (booking_id, guest_id, room_id, key_pin, issued_at, expires_at) VALUES
+(1, 1, '101', 123456, '2025-04-03 10:00:00', '2025-04-06 10:00:00'),
+(2, 2, '102', 654321, '2025-04-04 10:00:00', '2025-04-07 10:00:00');
 
 -- Insert data into roster
 INSERT INTO roster (date, floor, room_id, housekeeper_id, name, completed) VALUES

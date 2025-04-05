@@ -25,17 +25,15 @@ class Keycard(db.Model):
     guest_id = db.Column(db.Integer, nullable=False)  # Customer using the key
     room_id = db.Column(db.String(5), nullable=False)
     key_pin = db.Column(db.Integer, nullable=False, unique=True)  # 6-digit PIN
-    floor = db.Column(db.Integer, nullable=False)
     issued_at = db.Column(db.DateTime, default=datetime.utcnow)
     expires_at = db.Column(db.DateTime, nullable=True)  # Null if not expired
 
-    def __init__(self, keycard_id, booking_id, guest_id, room_id, key_pin, floor, issued_at, expires_at):
+    def __init__(self, keycard_id, booking_id, guest_id, room_id, key_pin, issued_at, expires_at):
         self.keycard_id = keycard_id
         self.booking_id = booking_id
         self.guest_id = guest_id
         self.room_id = room_id  # Use the provided room_id directly
         self.key_pin = int(key_pin) if isinstance(key_pin, str) else key_pin
-        self.floor = floor
         self.issued_at = issued_at
         self.expires_at = expires_at
 
@@ -46,7 +44,6 @@ class Keycard(db.Model):
             "guest_id": self.guest_id,
             "room_id": self.room_id,
             "key_pin": str(self.key_pin).zfill(6),  # Convert to 6-digit string
-            "floor": self.floor,
             "issued_at": str(self.issued_at),
             "expires_at": str(self.expires_at) if self.expires_at else None
         }
@@ -55,17 +52,6 @@ class Keycard(db.Model):
     @staticmethod
     def generate_pin():
         return random.randint(0, 999999)  # Return integer instead of string
-
-    @staticmethod
-    def generate_room_id(floor):
-        # Find the last room on the floor to get the next available room number
-        last_room = db.session.query(Keycard).filter_by(floor=floor).order_by(Keycard.room_id.desc()).first()
-        if last_room:
-            last_room_number = int(last_room.room_id)
-            new_room_number = str(last_room_number + 1)
-        else:
-            new_room_number = str(floor) + "01"
-        return new_room_number
 
 # Auto-create table if not already present
 with app.app_context():
@@ -92,12 +78,10 @@ def generate_keycard():
             data["booking_id"] = int(data["booking_id"])
         if isinstance(data.get("guest_id"), str):
             data["guest_id"] = int(data["guest_id"])
-        if isinstance(data.get("floor"), str):
-            data["floor"] = int(data["floor"])
-            
+
         print("Converted data:", data)  # Add detailed logging
 
-        required_fields = ["booking_id", "guest_id", "room_id", "floor"]
+        required_fields = ["booking_id", "guest_id", "room_id"]
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
             print(f"Missing fields: {missing_fields}")  # Add detailed logging
@@ -146,7 +130,6 @@ def generate_keycard():
                 guest_id=data["guest_id"],
                 room_id=data["room_id"],
                 key_pin=random.randint(0, 999999),  # Generate integer PIN
-                floor=data["floor"],
                 issued_at=datetime.utcnow(),
                 expires_at=expires_at
             )
@@ -191,7 +174,7 @@ def renew_keycard(booking_id):
 
     keycard.key_pin = str(random.randint(0, 999999)).zfill(6)
     keycard.issued_at = datetime.utcnow()
-    keycard.expires_at = None
+    keycard.expires_at = datetime.utcnow() + timedelta(days=1)
 
     try:
         db.session.commit()
@@ -236,6 +219,7 @@ def update_keycard_expiry(booking_id):
         db.session.rollback()
         return jsonify({"code": 500, "message": f"Error updating keycard expiry: {str(e)}"}), 500
 
+# Delete keycard by booking ID
 @app.route("/keycard/<booking_id>", methods=["DELETE"])
 def delete_keycard(booking_id):
     """Delete a keycard by booking ID."""

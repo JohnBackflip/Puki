@@ -66,6 +66,7 @@ def get_booking(booking_id):
         return jsonify({"code": 200, "data": booking.json()}), 200
     return jsonify({"code": 404, "message": "Booking not found."}), 404
 
+#update booking
 @app.route("/booking/<int:booking_id>", methods=["PUT"])
 def update_booking(booking_id):
     booking = db.session.scalar(db.select(Booking).filter_by(booking_id=booking_id))
@@ -177,54 +178,6 @@ def check_availability():
         return jsonify({"code": 400, "available": False, "message": "Room is not available for the selected period."}), 400
     
     return jsonify({"code": 200, "available": True, "message": "Room is available for the selected period."}), 200
-
-# Create a booking
-@app.route("/booking", methods=["POST"])
-def create_booking():
-    data = request.get_json()
-    guest_id = data.get("guest_id")
-    room_id = data.get("room_id")
-    floor = data.get("floor")
-    check_in = datetime.strptime(data.get("check_in"), "%Y-%m-%d").date()
-    check_out = datetime.strptime(data.get("check_out"), "%Y-%m-%d").date()
-    room_type = data.get("room_type")
-    price = data.get("price")
-    
-    if not all([guest_id, room_id, floor, check_in, check_out, room_type, price]):
-        return jsonify({"code": 400, "message": "Missing required fields."}), 400
-    
-    if check_out <= check_in:
-        return jsonify({"code": 400, "message": "Check-out must be after check-in."}), 400
-    
-    # Check if the room is available for the given dates
-    conflict = db.session.scalar(
-        db.select(Booking).filter(
-            Booking.room_id == room_id,
-            Booking.check_out > check_in,
-            Booking.check_in < check_out
-        )
-    )
-    
-    if conflict:
-        return jsonify({"code": 400, "message": "Room is already booked for the selected period."}), 400
-    
-    new_booking = Booking(
-        guest_id=guest_id,
-        room_id=room_id,
-        floor=floor,
-        check_in=check_in,
-        check_out=check_out,
-        room_type=room_type,
-        price=price
-    )
-    
-    try:
-        db.session.add(new_booking)
-        db.session.commit()
-        return jsonify({"code": 201, "data": new_booking.json()}), 201
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"code": 500, "message": f"Error creating booking: {str(e)}"}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5002, debug=True)
