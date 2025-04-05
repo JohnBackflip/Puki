@@ -179,8 +179,28 @@ services:
       - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
       - ROOM_URL=http://room:5008
       - ROSTER_URL=http://roster:5009
+      - HOUSEKEEPER_URL=http://housekeeper:5014
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5006/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ###################################
+  #5 Housekeeper: The Housekeeper mic roservice
+  ###################################
+  housekeeper:
+    build:
+      context: ./
+      dockerfile: housekeeper.Dockerfile
+    ports:
+      - "5014:5014"
+    networks:
+      - puki-network
+    environment:
+      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5014/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -323,6 +343,7 @@ services:
       - BOOKING_URL=http://booking:5002
       - PRICE_URL=http://price:5003
       - ROOM_URL=http://room:5008
+      - HOUSEKEEPER_URL=http://housekeeper:5014
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5013/health"]
       interval: 10s

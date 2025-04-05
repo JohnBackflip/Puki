@@ -16,23 +16,21 @@ class Roster(db.Model):
     __tablename__ = 'roster'
 
     date = db.Column(db.Date, nullable=False)
-    floor = db.Column(db.Integer, nullable=True)
     room_id = db.Column(db.String(36), nullable=True)
+    floor = db.Column(db.Integer, nullable=False)
     housekeeper_id = db.Column(db.Integer, nullable=False)
-    name = db.Column(db.String(50), nullable=False)
     completed = db.Column(db.Boolean, default=False)
     
     __table_args__ = (
-        db.PrimaryKeyConstraint('date', 'room_id', 'floor'),
+        db.PrimaryKeyConstraint('date', 'room_id', 'housekeeper_id'),
     )
 
     def json(self):
         return {
-            "date": self.date,
-            "floor": self.floor,   
+            "date": self.date, 
             "room_id": self.room_id,
+            "floor": self.floor,
             "housekeeper_id": self.housekeeper_id,
-            "name": self.name,
             "completed": self.completed
         }
     
@@ -44,8 +42,16 @@ with app.app_context():
 def health():
     return {"status": "healthy"}
 
+# Get all roster entries
+@app.route("/roster", methods=["GET"])
+def get_all_roster():
+    roster_list = Roster.query.all()
+    if roster_list:
+        return jsonify({"data": [r.json() for r in roster_list]}), 200
+    return jsonify({"message": "No roster found."}), 404
+
 # Create a roster entry
-@app.route("/roster", methods=["POST"])
+@app.route("/roster/new", methods=["POST"])
 def create_roster():
     data = request.get_json()
 
@@ -65,10 +71,9 @@ def create_roster():
         # Create a new roster entry
         roster = Roster(
             date=data["date"],
-            floor=data["floor"],
             room_id=data["room_id"],
+            floor=data["floor"],
             housekeeper_id=data["housekeeper_id"],
-            name=data["name"],
             completed=data.get("completed", False)
         )
 
@@ -111,26 +116,6 @@ def delete_roster(date, room_id):
         return jsonify({"message": "Roster entry deleted successfully."}), 200
 
     return jsonify({"message": "Roster entry not found."}), 404
-
-# New endpoint for assigning housekeeper by date & floor
-@app.route("/roster/assign", methods=["GET"])
-def get_housekeeper_by_date_and_floor():
-    date = request.args.get("date")
-    floor = request.args.get("floor")
-
-    if not date or not floor:
-        return jsonify({"code": 400, "message": "Missing date or floor parameter"}), 400
-
-    roster_entry = Roster.query.filter_by(date=date, floor=int(floor)).first()
-    if not roster_entry:
-        return jsonify({"code": 404, "message": "No housekeeper assigned for this floor on the given date."}), 404
-
-    return jsonify({
-        "code": 200,
-        "data": {
-            "assigned_housekeeper": roster_entry.housekeeper_id
-        }
-    }), 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5009, debug=True)
