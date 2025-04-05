@@ -47,6 +47,13 @@ CREATE TABLE IF NOT EXISTS keycard (
     FOREIGN KEY (room_id) REFERENCES room(room_id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS housekeeper (
+    housekeeper_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    floor INT NOT NULL,
+    FOREIGN KEY (floor) REFERENCES room(floor)
+);
+
 -- Roster table
 CREATE TABLE IF NOT EXISTS roster (
     date DATE NOT NULL,
@@ -79,6 +86,14 @@ INSERT INTO guest (name, email, contact) VALUES
 ('Isabella Harris', 'isabella@example.com', '1231117897'),
 ('Liam Clark', 'liam@example.com', '1232227898'),
 ('Ella Young', 'ella@example.com', '1233337899');
+
+-- Insert data into housekeeper
+INSERT INTO housekeeper (housekeeper_id, name, floor) VALUES
+(1, 'John Smith', 1),
+(2, 'Sarah Johnson', 1),
+(3, 'Michael White', 2),
+(4, 'Linda Green', 2),
+(5, 'David Black', 2);
 
 -- Insert data into room
 INSERT INTO room (room_id, room_type, key_pin, floor, status) VALUES

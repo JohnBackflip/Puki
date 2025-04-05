@@ -12,6 +12,7 @@ BOOKING_URL = environ.get('BOOKING_URL', 'http://localhost:5002')
 GUEST_URL = environ.get('GUEST_URL', 'http://localhost:5011')
 ROOM_URL = environ.get('ROOM_URL', 'http://localhost:5008')
 PRICE_URL = environ.get('PRICE_URL', 'http://localhost:5003')  # Updated to port 5003
+HOUSEKEEPER_URL = environ.get('HOUSEKEEPER_URL', 'http://localhost:5014')  # Added housekeeper URL
 
 #health check
 @app.route("/health", methods=["GET"])
