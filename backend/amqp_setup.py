@@ -3,7 +3,7 @@ import pika
 from os import environ
 
 hostname = "219.74.5.18"
-port = 5672
+port = 15672
 exchangename = "notification"
 exchangetype = "topic"
 

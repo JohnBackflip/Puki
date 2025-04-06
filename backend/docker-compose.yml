@@ -30,59 +30,59 @@ services:
       timeout: 5s
       retries: 5
 
-  kong-database:
-    image: postgres:17.4
-    restart: always
-    environment:
-      POSTGRES_USER: kong
-      POSTGRES_DB: kong
-      POSTGRES_PASSWORD: password
-    ports: 
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "kong"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # kong-database:
+  #   image: postgres:17.4
+  #   restart: always
+  #   environment:
+  #     POSTGRES_USER: kong
+  #     POSTGRES_DB: kong
+  #     POSTGRES_PASSWORD: password
+  #   ports: 
+  #     - "5432:5432"
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD", "pg_isready", "-U", "kong"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
 
-  kong-migration:
-    image: kong/kong-gateway:3.9
-    command: "kong migrations bootstrap"
-    restart: on-failure
-    environment:
-      KONG_DATABASE: postgres
-      KONG_PG_HOST: kong-database
-      KONG_PG_USER: kong
-      KONG_PG_PASSWORD: password
-    depends_on:
-      - kong-database
+  # kong-migration:
+  #   image: kong/kong-gateway:3.9
+  #   command: "kong migrations bootstrap"
+  #   restart: on-failure
+  #   environment:
+  #     KONG_DATABASE: postgres
+  #     KONG_PG_HOST: kong-database
+  #     KONG_PG_USER: kong
+  #     KONG_PG_PASSWORD: password
+  #   depends_on:
+  #     - kong-database
 
-  kong:
-    image: kong/kong-gateway:3.9
-    restart: always
-    environment:
-      KONG_ENFORCE_RBAC: "off" # optional, depending on your setup
-      KONG_DATABASE: postgres
-      KONG_PG_HOST: kong-database
-      KONG_PG_USER: kong
-      KONG_PG_PASSWORD: password
-      KONG_PROXY_ACCESS_LOG: /dev/stdout
-      KONG_ADMIN_ACCESS_LOG: /dev/stdout
-      KONG_PROXY_ERROR_LOG: /dev/stderr
-      KONG_ADMIN_ERROR_LOG: /dev/stderr
-      KONG_ADMIN_LISTEN: 0.0.0.0:8001
-      KONG_ADMIN_UI: false  # Disable the HTML UI
-      KONG_ADMIN_API_URI: http://localhost:8001
-      KONG_ADMIN_GUI_URL: http://localhost:8002
-      KONG_ADMIN_GUI_LISTEN: 0.0.0.0:8002
-    depends_on:
-      - kong-migration
-    ports:
-      - "8000:8000" # Takes incoming HTTP traffic from Consumers, and forwards it to upstream Services.
-      - "8001:8001" # Admin API. Listens for calls from the command line over HTTP.
-      - "8002:8002" # Kong Manager (GUI). Listens for HTTP traffic.
+  # kong:
+  #   image: kong/kong-gateway:3.9
+  #   restart: always
+  #   environment:
+  #     KONG_ENFORCE_RBAC: "off" # optional, depending on your setup
+  #     KONG_DATABASE: postgres
+  #     KONG_PG_HOST: kong-database
+  #     KONG_PG_USER: kong
+  #     KONG_PG_PASSWORD: password
+  #     KONG_PROXY_ACCESS_LOG: /dev/stdout
+  #     KONG_ADMIN_ACCESS_LOG: /dev/stdout
+  #     KONG_PROXY_ERROR_LOG: /dev/stderr
+  #     KONG_ADMIN_ERROR_LOG: /dev/stderr
+  #     KONG_ADMIN_LISTEN: 0.0.0.0:8001
+  #     KONG_ADMIN_UI: false  # Disable the HTML UI
+  #     KONG_ADMIN_API_URI: http://localhost:8001
+  #     KONG_ADMIN_GUI_URL: http://localhost:8002
+  #     KONG_ADMIN_GUI_LISTEN: 0.0.0.0:8002
+  #   depends_on:
+  #     - kong-migration
+  #   ports:
+  #     - "8000:8000" # Takes incoming HTTP traffic from Consumers, and forwards it to upstream Services.
+  #     - "8001:8001" # Admin API. Listens for calls from the command line over HTTP.
+  #     - "8002:8002" # Kong Manager (GUI). Listens for HTTP traffic.
 
   prometheus:
     image: prom/prometheus:latest

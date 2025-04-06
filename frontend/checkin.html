@@ -245,92 +245,88 @@
     <script src="js/main.js"></script>
 
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-          const guestForm = document.getElementById("guestForm");
-      
-          guestForm.addEventListener("submit", async function (e) {
-            e.preventDefault();
-      
-            const fullName = document.getElementById("fullName").value.trim();
-            const email = document.getElementById("email").value.trim();
-            const bookingID = document.getElementById("bookingID").value.trim();
-      
-            if (!fullName || !email || !bookingID) {
-              alert("Please fill in all fields.");
-              return;
-            }
-      
-            // Step 1: Check the booking
-            const bookingRes = await fetch(`http://localhost:5002/booking/${bookingID}`);
-            const bookingData = await bookingRes.json();
-      
-            if (bookingData.code !== 200) {
-              alert("Booking not found. Please check your details.");
-              return;
-            }
-      
-            const booking = bookingData.data;
-            const guestId = booking.guest_id;
-            const roomId = booking.room_id;
-      
-            // If no room assigned = check-in
-            if (!roomId) {
-              // Step 2: Perform check-in
-              fetch("http://localhost:5005/checkin", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ booking_id: parseInt(bookingID), name: fullName }),
-              })
-                .then((res) => res.json())
-                .then((data) => {
-                  if (data.code !== 200) throw new Error(data.message || "Check-in failed.");
-      
-                  // Save for confirmation page
-                  localStorage.setItem("checkedInBookingID", bookingID);
-                  window.location.href = "checkin-confirmation.html";
-                })
-                .catch((err) => {
-                  console.error("Check-in failed:", err);
-                  alert("Check-in failed. Please try again.");
-                });
-      
-            } else {
-              // Step 3: Perform check-out
-              const guestRes = await fetch(`http://localhost:5011/guest/${guestId}`);
-              const guestInfo = await guestRes.json();
-      
-              if (guestInfo.code !== 200) {
-                alert("Guest info not found.");
-                return;
-              }
-      
-              const mobileNumber = "91455020";
-      
-              fetch("http://localhost:5004/checkout", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  booking_id: parseInt(bookingID),
-                  name: fullName,
-                  room_id: roomId,
-                  mobile_number: mobileNumber
-                }),
-              })
-                .then((res) => res.json())
-                .then((data) => {
-                  if (data.code !== 200) throw new Error(data.message || "Checkout failed.");
-                  alert("Checkout successful. Thank you for staying with us!");
-                })
-                .catch((err) => {
-                  console.error("Checkout failed:", err);
-                  alert("Checkout failed. Please try again.");
-                });
-                
-            }
+  document.addEventListener("DOMContentLoaded", () => {
+    const guestForm = document.getElementById("guestForm");
+
+    guestForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const fullName = document.getElementById("fullName").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const bookingID = document.getElementById("bookingID").value.trim();
+
+      if (!fullName || !email || !bookingID) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      // Step 1: Check the booking
+      const bookingRes = await fetch(`http://localhost:5002/booking/${bookingID}`);
+      const bookingData = await bookingRes.json();
+
+      if (bookingData.code !== 200) {
+        alert("Booking not found. Please check your details.");
+        return;
+      }
+
+      const booking = bookingData.data;
+      const guestId = booking.guest_id;
+      const roomId = booking.room_id;
+
+      // If no room assigned = check-in
+      if (!roomId || roomId === null || roomId === "null") {
+        // Step 2: Perform check-in
+        fetch("http://localhost:5005/checkin", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ booking_id: parseInt(bookingID), name: fullName }),
+        })
+            .then((res) => res.json())
+            .then((data) => {
+            if (data.code !== 200) throw new Error(data.message || "Check-in failed.");
+            localStorage.setItem("checkedInBookingID", bookingID);
+            window.location.href = "checkin-confirmation.html";
+            })
+            .catch((err) => {
+            console.error("Check-in failed:", err);
+            alert("Check-in failed. Please try again.");
+            });
+        } else {
+        // Step 3: Perform check-out
+        const guestRes = await fetch(`http://localhost:5011/guest/${guestId}`);
+        const guestInfo = await guestRes.json();
+
+        if (guestInfo.code !== 200) {
+          alert("Guest info not found.");
+          return;
+        }
+
+        const mobileNumber = guestInfo.data.contact;
+
+        fetch("http://localhost:5004/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            booking_id: parseInt(bookingID),
+            name: fullName,
+            room_id: roomId,
+            mobile_number: mobileNumber
+          }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.code !== 200) throw new Error(data.message || "Checkout failed.");
+            alert("Checkout successful. Thank you for staying with us!");
+          })
+          .catch((err) => {
+            console.error("Checkout failed:", err);
+            alert("Checkout failed. Please try again.");
           });
-        });
-      </script>
-      
+      }
+    });
+  });
+</script>
+
       
 
 </body>

@@ -137,7 +137,7 @@ INSERT INTO roster (date, floor, room_id, housekeeper_id, name, completed) VALUE
 INSERT INTO housekeeper (housekeeper_id, name, floor) VALUES
 (1, 'John Smith', 1),
 (2, 'Sarah Johnson', 1),
-(3, 'Michael White', 2),
+(3, 'Michael White', 2), 
 (4, 'Linda Green', 2),
 (5, 'David Black', 2);
 
