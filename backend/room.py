@@ -69,7 +69,8 @@ def create_room():
         return jsonify({"code": 201, "data": new_room.json()}), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify({"code": 500, "message": f"Error creating room: {str(e)}"}), 500
+        print("Error creating room:", str(e))
+        return jsonify({"code": 500, "message": "Error creating room."}), 500
 
 # get room by ID
 @app.route("/room/<string:room_id>", methods=["GET"])
