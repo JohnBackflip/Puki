@@ -270,7 +270,7 @@
             </div> -->
             <!-- Confirm Reservation Button at the Bottom -->
             <div class="confirm-btn-container">
-                <button type="submit" class="btn btn-confirm" data-amount="1000" data-currency="SGD"
+                <button type="button" class="btn btn-confirm" id="confirmBookingBtn" data-amount="1000" data-currency="SGD"
                     data-description="single room">
                     Confirm Booking
                 </button>
@@ -348,78 +348,7 @@
     <script src="https://js.stripe.com/v3/"></script>
     <script src="js/payment.js"></script>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-          const paymentForm = document.getElementById("paymentForm");
-      
-          paymentForm?.addEventListener("submit", async function (e) {
-            e.preventDefault();
-      
-            const fullName = document.getElementById("fullName").value;
-            const email = document.getElementById("email").value;
-            const phoneNumber = document.getElementById("phoneNumber").value;
-      
-            const roomType = localStorage.getItem("roomType");
-            const bookingDetails = JSON.parse(localStorage.getItem("bookingDetails")) || {};
-            const roomId = bookingDetails.room_id || "101";
-            const floor = bookingDetails.floor || 1;
-            const checkIn = localStorage.getItem("checkInDate");
-            const checkOut = localStorage.getItem("checkOutDate");
-            const price = bookingDetails.totalCost || 300;
-      
-            // Step 1: Create Guest
-            try {
-              const guestResponse = await fetch("http://localhost:8000/guest", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  name: fullName,
-                  email: email,
-                  contact: phoneNumber
-                })
-              });
-      
-              if (!guestResponse.ok) throw new Error("Guest creation failed.");
-              const guestData = await guestResponse.json();
-              const guestId = guestData.guest_id;
-      
-              // Step 2: Create Booking
-              const bookingResponse = await fetch("http://localhost:8000/booking", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  guest_id: guestId,
-                  room_id: roomId,
-                  floor: floor,
-                  check_in: checkIn,
-                  check_out: checkOut,
-                  room_type: roomType,
-                  price: price
-                })
-              });
-      
-              if (!bookingResponse.ok) throw new Error("Booking creation failed.");
-              const bookingData = await bookingResponse.json();
-      
-            // Step 3: Optional: trigger SMS notification
-            await fetch("http://localhost:8000/notification", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                phoneNumber: phoneNumber,  // 👈 must match your backend field
-                message: `Hi ${fullName}, your booking at Puki Hotel is confirmed!\nRoom: ${roomType}\nCheck-in: ${checkIn}\nCheck-out: ${checkOut}\nTotal: $${price}`
-                })
-            });
-      
-              alert("Booking completed and confirmation sent!");
-              window.location.href = "bookingconfirmation.html";
-            } catch (err) {
-              console.error("Error:", err.message);
-              alert("There was an error during booking. Please try again.");
-            }
-          });
-        });
-      </script>
+    
       
 </body>
 

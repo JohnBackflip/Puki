@@ -21,8 +21,8 @@ class Booking(db.Model):
 
     booking_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     guest_id = db.Column(db.Integer, nullable=False)
-    room_id = db.Column(db.String(36), nullable=False)
-    floor = db.Column(db.Integer, nullable=False)
+    room_id = db.Column(db.String(36), nullable=True)
+    floor = db.Column(db.Integer, nullable=True)
     check_in = db.Column(db.Date, nullable=False)
     check_out = db.Column(db.Date, nullable=False)
     room_type = db.Column(db.String(36), nullable=False)
@@ -191,20 +191,22 @@ def create_booking():
     room_type = data.get("room_type")
     price = data.get("price")
     
-    if not all([guest_id, room_id, floor, check_in, check_out, room_type, price]):
+    if not all([guest_id, check_in, check_out, room_type, price]):
         return jsonify({"code": 400, "message": "Missing required fields."}), 400
     
     if check_out <= check_in:
         return jsonify({"code": 400, "message": "Check-out must be after check-in."}), 400
     
     # Check if the room is available for the given dates
-    conflict = db.session.scalar(
-        db.select(Booking).filter(
-            Booking.room_id == room_id,
-            Booking.check_out > check_in,
-            Booking.check_in < check_out
+    conflict = None
+    if room_id:
+        conflict = db.session.scalar(
+            db.select(Booking).filter(
+                Booking.room_id == room_id,
+                Booking.check_out > check_in,
+                Booking.check_in < check_out
+            )
         )
-    )
     
     if conflict:
         return jsonify({"code": 400, "message": "Room is already booked for the selected period."}), 400
