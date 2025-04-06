@@ -175,5 +175,30 @@ def update_room_availability():
         db.session.rollback()
         return jsonify({"code": 500, "message": f"Error updating room availability: {str(e)}"}), 500
 
+# Update room status
+@app.route("/room/<string:room_id>/update-status", methods=["PUT"])
+def update_room_status(room_id):
+    data = request.get_json()
+    
+    # Validate that the status is provided
+    if not data or "status" not in data:
+        return jsonify({"code": 400, "message": "Status is required."}), 400
+
+    # Fetch the room from the database
+    room = db.session.scalar(db.select(Room).filter_by(room_id=room_id))
+
+    if not room:
+        return jsonify({"code": 404, "message": "Room not found."}), 404
+
+    # Update the room's status
+    room.availability = data["status"]
+
+    try:
+        db.session.commit()
+        return jsonify({"code": 200, "message": "Room status updated successfully.", "data": room.json()}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"code": 500, "message": f"Error updating room status: {str(e)}"}), 500
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5008, debug=True)
