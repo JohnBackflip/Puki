@@ -48,8 +48,8 @@ def health():
 def get_all_roster():
     roster_list = Roster.query.all()
     if roster_list:
-        return jsonify({"data": [r.json() for r in roster_list]}), 200
-    return jsonify({"message": "No roster found."}), 404
+        return jsonify({"code": 200, "data": [r.json() for r in roster_list]}), 200
+    return jsonify({"code": 404, "message": "No roster found."}), 404
 
 # Create a roster entry
 @app.route("/roster/new", methods=["POST"])
@@ -92,7 +92,7 @@ def create_roster():
 def get_roster_by_housekeeper_id(housekeeper_id):
     roster_list = Roster.query.filter_by(housekeeper_id=housekeeper_id).all()
     if roster_list:
-        return jsonify({"data": [r.json() for r in roster_list]}), 200
+        return jsonify({"code": 200, "data": [r.json() for r in roster_list]}), 200
     return jsonify({"code": 404, "message": "No roster found for the provided housekeeper ID."}), 404
 
 # Get roster by date
