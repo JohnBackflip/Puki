@@ -6,10 +6,10 @@ A standalone script to create exchanges and queues on RabbitMQ.
 
 import pika
 
-hostname = "219.74.5.18"
-port = 15672
-exchangename = "notification"
-exchangetype = "topic"
+amqp_host = "localhost"
+amqp_port = 5672
+exchange_name = "sms_topic"
+exchange_type = "topic"
 
 def create_exchange(hostname, port, exchange_name, exchange_type):
     print(f"Connecting to AMQP broker {hostname}:{port}...")
@@ -63,4 +63,3 @@ create_queue(
     queue_name="sms_queue",
     routing_key="#",
 )
-

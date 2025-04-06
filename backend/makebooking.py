@@ -102,29 +102,29 @@ def create_booking():
         traceback.print_exc()
         return jsonify({"code": 500, "message": f"Internal server error: {str(e)}"}), 500
 
-def publish_notification(mobile_number, message):
-    try:
-        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-        channel = connection.channel()
-        channel.queue_declare(queue='sms_queue', durable=True)
+# def publish_notification(mobile_number, message):
+#     try:
+#         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+#         channel = connection.channel()
+#         channel.queue_declare(queue='sms_queue', durable=True)
 
-        payload = {
-            "mobile_number": mobile_number,
-            "message": message
-        }
+#         payload = {
+#             "mobile_number": mobile_number,
+#             "message": message
+#         }
 
-        channel.basic_publish(
-            exchange='',
-            routing_key='sms_queue',
-            body=json.dumps(payload),
-            properties=pika.BasicProperties(
-                delivery_mode=2  # make message persistent
-            )
-        )
-        connection.close()
-        print("Notification queued for:", mobile_number)
-    except Exception as e:
-        print("Failed to queue SMS:", e)
+#         channel.basic_publish(
+#             exchange='',
+#             routing_key='sms_queue',
+#             body=json.dumps(payload),
+#             properties=pika.BasicProperties(
+#                 delivery_mode=2  # make message persistent
+#             )
+#         )
+#         connection.close()
+#         print("Notification queued for:", mobile_number)
+#     except Exception as e:
+#         print("Failed to queue SMS:", e)
 
 
 if __name__ == "__main__":
