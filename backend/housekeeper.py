@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from os import environ
+import random
 
 app = Flask(__name__)
 CORS(app)
@@ -42,6 +43,8 @@ def get_all_housekeepers():
     housekeepers = Housekeeper.query.all()
     return jsonify([h.json() for h in housekeepers]), 200
 
+
+
 # Create a new housekeeper
 @app.route("/housekeeper", methods=["POST"])
 def create_housekeeper():
@@ -78,6 +81,19 @@ def get_housekeeper_by_floor(floor):
             "name": housekeeper_entry.name,
             "floor": housekeeper_entry.floor
         }
+    }), 200
+
+#get name
+@app.route("/housekeeper/<int:housekeeper_id>", methods=["GET"])
+def get_housekeeper_by_id(housekeeper_id):
+    housekeeper = Housekeeper.query.filter_by(housekeeper_id=housekeeper_id).first()
+
+    if not housekeeper:
+        return jsonify({"code": 404, "message": "Housekeeper not found."}), 404
+
+    return jsonify({
+        "code": 200,
+        "data": housekeeper.json()
     }), 200
 
 if __name__ == "__main__":

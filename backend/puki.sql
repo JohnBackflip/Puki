@@ -61,7 +61,6 @@ CREATE TABLE IF NOT EXISTS roster (
     floor INT NOT NULL,
     room_id VARCHAR(5) NOT NULL,
     housekeeper_id INT NOT NULL,
-    name VARCHAR(50) NOT NULL,
     completed BOOLEAN DEFAULT FALSE,
     PRIMARY KEY (date, room_id, floor),
     FOREIGN KEY (room_id) REFERENCES room(room_id)
@@ -121,17 +120,17 @@ INSERT INTO keycard (booking_id, guest_id, room_id, key_pin, issued_at, expires_
 (4, 4, '202', 321654, '2025-04-06 10:00:00', '2025-04-09 10:00:00');
 
 -- Insert data into roster
-INSERT INTO roster (date, floor, room_id, housekeeper_id, name, completed) VALUES
-('2025-04-01', 1, '101', 1, 'John Smith', FALSE),
-('2025-04-02', 1, '102', 2, 'Sarah Johnson', FALSE),
-('2025-04-03', 2, '201', 3, 'Michael White', FALSE),
-('2025-04-04', 2, '202', 4, 'Linda Green', FALSE),
-('2025-04-05', 2, '203', 5, 'David Black', FALSE),
-('2025-04-06', 2, '204', 6, 'Emily Brown', FALSE),
-('2025-04-07', 3, '301', 7, 'Daniel Harris', FALSE),
-('2025-04-08', 3, '302', 8, 'Isabella Lewis', FALSE),
-('2025-04-09', 4, '401', 9, 'George Young', FALSE),
-('2025-04-10', 4, '402', 10, 'Oliver Clark', FALSE);
+INSERT INTO roster (date, floor, room_id, housekeeper_id, completed) VALUES
+('2025-04-01', 1, '101', 1, FALSE),
+('2025-04-02', 1, '102', 2, FALSE),
+('2025-04-03', 2, '201', 3, FALSE),
+('2025-04-04', 2, '202', 4, FALSE),
+('2025-04-05', 2, '203', 5, FALSE),
+('2025-04-06', 2, '204', 6, FALSE),
+('2025-04-07', 3, '301', 7, FALSE),
+('2025-04-08', 3, '302', 8, FALSE),
+('2025-04-09', 4, '401', 9, FALSE),
+('2025-04-10', 4, '402', 10, FALSE);
 
 -- Insert data into housekeeper
 INSERT INTO housekeeper (housekeeper_id, name, floor) VALUES

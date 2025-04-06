@@ -78,6 +78,7 @@
             text-align: center;
         }
         
+        /* Admin Panel Styling */
         .admin-container {
             display: none;
         }
@@ -319,6 +320,7 @@
             background-color: rgba(255, 255, 255, 0.1);
         }
         
+        /* Room details modal */
         .room-details-modal .modal-content {
             max-width: 800px;
         }
@@ -358,6 +360,7 @@
     </style>
 </head>
 <body>
+    <!-- Login Page -->
     <div class="login-container" id="login-container">
         <div class="login-form">
             <h1>Hotel Admin Login</h1>
@@ -374,6 +377,7 @@
         </div>
     </div>
 
+    <!-- Admin Panel -->
     <div class="admin-container" id="admin-container">
         <nav class="navbar">
             <h1>Hotel Admin Panel</h1>
@@ -386,6 +390,7 @@
         </nav>
 
         <div class="admin-content">
+            <!-- Promotion Page -->
             <div class="page active" id="promotion-page">
                 <div class="card">
                     <h2>Add New Promotion</h2>
@@ -441,19 +446,47 @@
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody></tbody>
+                        <tbody>
+                            <tr>
+                                <td>Early Bird Discount</td>
+                                <td>EARLY25</td>
+                                <td>2025-03-20</td>
+                                <td>2025-03-31</td>
+                                <td>25%</td>
+                                <td>All Rooms</td>
+                                <td>
+                                    <button class="action-btn edit">Edit</button>
+                                    <button class="action-btn delete">Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Weekend Special</td>
+                                <td>WEEKEND20</td>
+                                <td>2025-04-01</td>
+                                <td>2025-04-30</td>
+                                <td>20%</td>
+                                <td>Family</td>
+                                <td>
+                                    <button class="action-btn edit">Edit</button>
+                                    <button class="action-btn delete">Delete</button>
+                                </td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
 
+
+               
+            <!-- Room Availability Page -->
             <div class="page" id="availability-page">
                 <div class="card">
                     <h2>Room Availability</h2>
                     <div class="calendar-header">
                         <h3 id="availability-current-month"></h3>
                         <div class="calendar-nav">
-                            <button id="availability-prev-month">< Previous</button>
-                            <button id="availability-next-month">Next ></button>
+                            <button id="availability-prev-month">&lt; Previous</button>
+                            <button id="availability-next-month">Next &gt;</button>
                         </div>
                     </div>
                     <div class="calendar" id="availability-calendar"></div>
@@ -478,6 +511,7 @@
                 </div>
             </div>
 
+            <!-- Housekeeping Roster Page -->
             <div class="page" id="roster-page">
                 <div class="card">
                     <h2 style="text-align: center;">Housekeeping Roster</h2>
@@ -488,417 +522,481 @@
                         <thead>
                             <tr>
                                 <th>Floor</th>
-                                <th>Cleaner</th>
+                                <th>Cleaner ID</th>
                                 <th>Rooms</th>
                             </tr>
                         </thead>
-                        <tbody></tbody>
+                        <tbody>
+                            <!-- Rows will be dynamically populated -->
+                        </tbody>
                     </table>
                     <div class="calendar-nav" style="margin-top: 20px; text-align: center;">
-                        <button id="roster-prev-day">< Previous Day</button>
-                        <button id="roster-next-day">Next Day ></button>
+                        <button id="roster-prev-day">&lt; Previous Day</button>
+                        <button id="roster-next-day">Next Day &gt;</button>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <script>
-            // Login functionality
-            document.getElementById("login-btn").addEventListener("click", function() {
-                const email = document.getElementById("email").value;
-                const password = document.getElementById("password").value;
-                const correctEmail = "admin@puki.com";
-                const correctPassword = "pw";
 
-                if (email === correctEmail && password === correctPassword) {
-                    document.getElementById("login-container").style.display = "none";
-                    document.getElementById("admin-container").style.display = "block";
-                } else {
-                    document.getElementById("login-error").textContent = "Invalid email or password!";
-                }
-            });
-
-            // Navigation
-            document.addEventListener("DOMContentLoaded", function() {
-                const navLinks = document.querySelectorAll('.nav-link');
-                const pages = document.querySelectorAll('.page');
-
-                navLinks.forEach(link => {
-                    link.addEventListener('click', function(event) {
-                        event.preventDefault();
-                        navLinks.forEach(link => link.classList.remove('active'));
-                        pages.forEach(page => page.classList.remove('active'));
-                        link.classList.add('active');
-                        const pageId = link.getAttribute('data-page');
-                        document.getElementById(pageId).classList.add('active');
-                    });
-                });
-            });
-
-            // 1. Save Promotions to Backend
-            document.getElementById("add-promo-btn").addEventListener("click", function() {
-                const promoData = {
-                    "promo-name": document.getElementById("promo-name").value,
-                    "promo-code": document.getElementById("promo-code").value,
-                    "promo-start": document.getElementById("promo-start").value,
-                    "promo-end": document.getElementById("promo-end").value,
-                    "promo-discount": parseFloat(document.getElementById("promo-discount").value),
-                    "room-type": document.getElementById("promo-room-type").value
-                };
-
-                if (!promoData["promo-name"] || !promoData["promo-code"] || !promoData["promo-start"] || !promoData["promo-end"] || isNaN(promoData["promo-discount"])) {
-                    alert("Please fill in all fields.");
-                    return;
-                }
-
-                fetch("http://localhost:5015/promotion", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
+            <script>
+                // Room Availability Script
+                let roomAvailability = {
+                    "2025-04-04": {
+                        single: 5,
+                        double: 3,
+                        family: 2
                     },
-                    body: JSON.stringify(promoData)
-                })
-                .then(res => res.json())
-                .then(response => {
-                    if (response.code === 201) {
-                        alert("✅ Promotion added!");
-                        location.reload();
-                    } else {
-                        alert("❌ Failed to add promotion: " + response.message);
+                    "2025-04-06": {
+                        single: 4,
+                        double: 2,
+                        family: 1
+                    },
+                    "2025-04-07": {
+                        single: 3,
+                        double: 4,
+                        family: 3
+                    },
+                    "2025-04-08": {
+                        single: 2,
+                        double: 1,
+                        family: 0
+                    },
+                    "2025-03-20": {
+                        single: 1,
+                        double: 0,
+                        family: 0
                     }
-                })
-                .catch(error => {
-                    console.error("Error:", error);
-                    alert("An error occurred while saving the promotion.");
-                });
-            });
+                };
 
-            // 2. Fetch Promotions on Page Load
-            document.addEventListener("DOMContentLoaded", function () {
-                // Load promotions
-                fetch("http://localhost:5015/promotion/all")
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.code === 200 && data.data.promotions) {
-                            const tableBody = document.getElementById("promotions-table").getElementsByTagName("tbody")[0];
-                            tableBody.innerHTML = "";
+                // Function to generate the availability calendar
+                function generateAvailabilityCalendar(year, month) {
+                    const calendar = document.getElementById('availability-calendar');
+                    calendar.innerHTML = '';
 
-                            data.data.promotions.forEach(promo => {
-                                const row = tableBody.insertRow();
-                                row.innerHTML = `
-                                    <td>${promo.promo_name}</td>
-                                    <td>${promo.promo_code}</td>
-                                    <td>${promo.promo_start}</td>
-                                    <td>${promo.promo_end}</td>
-                                    <td>${promo.promo_discount}%</td>
-                                    <td>${promo.room_type}</td>
-                                    <td>
-                                        <button class="action-btn edit" data-id="${promo.promo_id}">Edit</button>
-                                        <button class="action-btn delete" data-id="${promo.promo_id}">Delete</button>
-                                    </td>
-                                `;
-                            });
+                    // Get the first day of the month
+                    const firstDay = new Date(year, month, 1);
+                    const firstDayOfWeek = firstDay.getDay();
 
-                            // Add event listeners for delete buttons
-                            document.querySelectorAll('.action-btn.delete').forEach(button => {
-                                button.addEventListener('click', function() {
-                                    const promoId = this.getAttribute('data-id');
-                                    if (confirm('Are you sure you want to delete this promotion?')) {
-                                        deletePromotion(promoId);
-                                    }
+                    // Get the last day of the month
+                    const lastDay = new Date(year, month + 1, 0).getDate();
+
+                    let day = 1;
+                    for (let i = 0; i < 6; i++) {
+                        const week = document.createElement('div');
+                        week.className = 'week';
+
+                        for (let j = 0; j < 7; j++) {
+                            const dayCell = document.createElement('div');
+                            dayCell.className = 'day';
+
+                            if (i === 0 && j < firstDayOfWeek) {
+                                dayCell.textContent = '';
+                            } else if (day > lastDay) {
+                                dayCell.textContent = '';
+                            } else {
+                                dayCell.textContent = day;
+                                const currentDay = day; // Capture the current day
+                                dayCell.addEventListener('click', () => {
+                                    showRoomDetails(year, month, currentDay);
                                 });
-                            });
+                                day++;
+                            }
+
+                            week.appendChild(dayCell);
                         }
-                    })
-                    .catch(error => console.error("Failed to load promotions:", error));
 
-                // Function to delete a promotion
-                function deletePromotion(promoId) {
-                    fetch(`http://localhost:5015/promotion/${promoId}`, {
-                        method: 'DELETE'
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.code === 200) {
-                            alert('✅ Promotion deleted successfully!');
-                            location.reload();
-                        } else {
-                            alert(`❌ Failed to delete promotion: ${data.message}`);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error deleting promotion:', error);
-                        alert('An error occurred while deleting the promotion.');
-                    });
-                }
-
-                // Load initial room availability
-                fetch("http://localhost:5008/room")
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.code === 200) {
-                            // Process room data and update the UI
-                            updateRoomAvailabilityDisplay(data.data.rooms);
-                        }
-                    })
-                    .catch(error => console.error("Failed to load room availability:", error));
-            });
-
-            // Room Availability Data
-            let roomAvailability = {};
-
-            // Function to update room availability display
-            function updateRoomAvailabilityDisplay(rooms) {
-                if (!rooms) return;
-                
-                // Process the room data and update the roomAvailability object
-                const dateStr = new Date().toISOString().split("T")[0]; // Today's date
-                
-                // Count rooms by type
-                const countByType = {
-                    "Single": 0,
-                    "Double": 0,
-                    "Family": 0
-                };
-                
-                rooms.forEach(room => {
-                    if (room.availability === "VACANT") {
-                        if (room.room_type === "Single") countByType.Single++;
-                        else if (room.room_type === "Double") countByType.Double++;
-                        else if (room.room_type === "Family") countByType.Family++;
-                    }
-                });
-                
-                // Store in roomAvailability
-                roomAvailability[dateStr] = {
-                    single: countByType.Single,
-                    double: countByType.Double,
-                    family: countByType.Family
-                };
-                
-                // Update calendar with the new data
-                const availabilityCalendar = document.getElementById('availability-calendar');
-                if (availabilityCalendar) {
-                    generateAvailabilityCalendar(availabilityYear, availabilityMonth);
-                }
-            }
-
-            function generateAvailabilityCalendar(year, month) {
-                const calendar = document.getElementById('availability-calendar');
-                calendar.innerHTML = '';
-                const firstDay = new Date(year, month, 1);
-                const firstDayOfWeek = firstDay.getDay();
-                const lastDay = new Date(year, month + 1, 0).getDate();
-
-                let day = 1;
-                for (let i = 0; i < 6; i++) {
-                    for (let j = 0; j < 7; j++) {
-                        const dayCell = document.createElement('div');
-                        dayCell.className = 'calendar-day';
-
-                        if (i === 0 && j < firstDayOfWeek) {
-                            dayCell.textContent = '';
-                        } else if (day > lastDay) {
-                            dayCell.textContent = '';
-                        } else {
-                            dayCell.textContent = day;
-                            const currentDay = day;
-                            dayCell.addEventListener('click', () => {
-                                showRoomDetails(year, month, currentDay);
-                            });
-                            day++;
-                        }
-                        calendar.appendChild(dayCell);
+                        calendar.appendChild(week);
                     }
                 }
-            }
 
-            function showRoomDetails(year, month, day) {
-                const selectedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const roomDetails = document.getElementById('room-details');
-                roomDetails.classList.remove('hidden');
-                document.getElementById('availability-selected-date').textContent = selectedDate;
+                // Function to show room details for a selected date
+                function showRoomDetails(year, month, day) {
+                    const selectedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const roomDetails = document.getElementById('room-details');
+                    roomDetails.classList.remove('hidden');
 
-                if (roomAvailability[selectedDate]) {
-                    document.getElementById('single-count').value = roomAvailability[selectedDate].single;
-                    document.getElementById('double-count').value = roomAvailability[selectedDate].double;
-                    document.getElementById('family-count').value = roomAvailability[selectedDate].family;
-                } else {
-                    document.getElementById('single-count').value = 0;
-                    document.getElementById('double-count').value = 0;
-                    document.getElementById('family-count').value = 0;
+                    document.getElementById('availability-selected-date').textContent = selectedDate;
+
+                    // Check if room availability data exists for the selected date
+                    if (roomAvailability[selectedDate]) {
+                        document.getElementById('single-count').value = roomAvailability[selectedDate].single;
+                        document.getElementById('double-count').value = roomAvailability[selectedDate].double;
+                        document.getElementById('family-count').value = roomAvailability[selectedDate].family;
+                    } else {
+                        document.getElementById('single-count').value = 0;
+                        document.getElementById('double-count').value = 0;
+                        document.getElementById('family-count').value = 0;
+                    }
                 }
-            }
 
-            // 2. Save Room Availability
-            document.getElementById('save-changes').addEventListener('click', () => {
-                const selectedDate = document.getElementById('availability-selected-date').textContent;
-                const singleCount = parseInt(document.getElementById('single-count').value);
-                const doubleCount = parseInt(document.getElementById('double-count').value);
-                const familyCount = parseInt(document.getElementById('family-count').value);
+                // Function to save changes to room availability
+                document.getElementById('save-changes').addEventListener('click', () => {
+                    const selectedDate = document.getElementById('availability-selected-date').textContent;
+                    const singleCount = parseInt(document.getElementById('single-count').value);
+                    const doubleCount = parseInt(document.getElementById('double-count').value);
+                    const familyCount = parseInt(document.getElementById('family-count').value);
 
-                const payload = {
-                    date: selectedDate,
-                    availability: {
+                    roomAvailability[selectedDate] = {
                         single: singleCount,
                         double: doubleCount,
                         family: familyCount
-                    }
-                };
+                    };
 
-                fetch("http://localhost:5008/room/available", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(payload)
-                })
-                .then(res => res.json())
-                .then(response => {
-                    if (response.code === 200 || response.code === 201) {
-                        alert("✅ Room availability updated.");
-                        roomAvailability[selectedDate] = {
-                            single: singleCount,
-                            double: doubleCount,
-                            family: familyCount
-                        };
+                    alert('Changes saved!');
+                });
+
+                // Initialize the availability calendar
+                let availabilityYear = new Date().getFullYear();
+                let availabilityMonth = new Date().getMonth();
+                document.getElementById('availability-current-month').textContent = `${new Date(availabilityYear, availabilityMonth).toLocaleString('default', { month: 'long' })} ${availabilityYear}`;
+
+                generateAvailabilityCalendar(availabilityYear, availabilityMonth);
+
+                // Navigation buttons for availability
+                document.getElementById('availability-prev-month').addEventListener('click', () => {
+                    if (availabilityMonth === 0) {
+                        availabilityMonth = 11;
+                        availabilityYear--;
                     } else {
-                        alert("❌ Failed to update availability: " + (response.message || "Unknown error"));
+                        availabilityMonth--;
                     }
-                })
-                .catch(err => {
-                    console.error("Error updating availability:", err);
-                    alert("❌ Error connecting to server. Please try again later.");
+
+                    document.getElementById('availability-current-month').textContent = `${new Date(availabilityYear, availabilityMonth).toLocaleString('default', { month: 'long' })} ${availabilityYear}`;
+                    generateAvailabilityCalendar(availabilityYear, availabilityMonth);
                 });
-            });
 
-            // Initialize calendar
-            let availabilityYear = new Date().getFullYear();
-            let availabilityMonth = new Date().getMonth();
-            document.getElementById('availability-current-month').textContent = `${new Date(availabilityYear, availabilityMonth).toLocaleString('default', { month: 'long' })} ${availabilityYear}`;
-            generateAvailabilityCalendar(availabilityYear, availabilityMonth);
+                document.getElementById('availability-next-month').addEventListener('click', () => {
+                    if (availabilityMonth === 11) {
+                        availabilityMonth = 0;
+                        availabilityYear++;
+                    } else {
+                        availabilityMonth++;
+                    }
 
-            document.getElementById('availability-prev-month').addEventListener('click', () => {
-                if (availabilityMonth === 0) {
-                    availabilityMonth = 11;
-                    availabilityYear--;
-                } else {
-                    availabilityMonth--;
-                }
-                document.getElementById('availability-current-month').textContent = `${new Date(availabilityYear, availabilityMonth).toLocaleString('default', { month: 'long' })} ${availabilityYear}`;
-                generateAvailabilityCalendar(availabilityYear, availabilityMonth);
-            });
+                    document.getElementById('availability-current-month').textContent = `${new Date(availabilityYear, availabilityMonth).toLocaleString('default', { month: 'long' })} ${availabilityYear}`;
+                    generateAvailabilityCalendar(availabilityYear, availabilityMonth);
+                });
 
-            document.getElementById('availability-next-month').addEventListener('click', () => {
-                if (availabilityMonth === 11) {
-                    availabilityMonth = 0;
-                    availabilityYear++;
-                } else {
-                    availabilityMonth++;
-                }
-                document.getElementById('availability-current-month').textContent = `${new Date(availabilityYear, availabilityMonth).toLocaleString('default', { month: 'long' })} ${availabilityYear}`;
-                generateAvailabilityCalendar(availabilityYear, availabilityMonth);
-            });
 
-            // Roster
-            document.addEventListener("DOMContentLoaded", function () {
-                let currentDate = new Date();
-                const rosterTableBody = document.querySelector("#roster-table tbody");
+                document.addEventListener("DOMContentLoaded", function () {
+                    const tableBody = document.querySelector("#roster-table tbody");
+                    const dateDisplay = document.getElementById("roster-current-date");
+                    const prevBtn = document.getElementById("roster-prev-day");
+                    const nextBtn = document.getElementById("roster-next-day");
 
-                function formatDate(date) {
-                    return date.toISOString().split("T")[0];
-                }
+                    let currentDate = new Date();
 
-                function updateRosterView(date) {
-                    const formattedDate = formatDate(date);
-                    document.getElementById("roster-current-date").textContent = date.toDateString();
-                    rosterTableBody.innerHTML = "";
+                    function formatDate(date) {
+                        return date.toISOString().split("T")[0];
+                    }
 
-                    fetch(`http://localhost:5009/roster/${formattedDate}`, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! Status: ${response.status}`);
-                        }
-                        return response.json();
-                    })
-                    .then(rosterData => {
-                        if (rosterData.code === 200) {
-                            const rosterEntries = rosterData.data.roster || [];
-                            
-                            // Group roster entries by floor
-                            const floorMap = {};
-                            rosterEntries.forEach(entry => {
-                                if (!floorMap[entry.floor]) {
-                                    floorMap[entry.floor] = {
-                                        floor: entry.floor,
-                                        housekeeper: entry.housekeeper_id,
-                                        rooms: []
-                                    }; 
-                                } 
-                                if (entry.room_id) {
-                                    floorMap[entry.floor].rooms.push(entry.room_id);
+                    function loadRoster(date) {
+                        const dateStr = formatDate(date);
+                        dateDisplay.textContent = `Roster for ${dateStr}`;
+
+                        fetch(`http://localhost:5009/roster/${dateStr}`)
+                            .then(res => res.json())
+                            .then(data => {
+                                tableBody.innerHTML = "";
+
+                                if (data.code === 200 && data.data.roster.length > 0) {
+                                    // Group by floor and cleaner
+                                    const grouped = {};
+                                    data.data.roster.forEach(entry => {
+                                        const key = `${entry.floor}-${entry.housekeeper_id}`;
+                                        if (!grouped[key]) {
+                                            grouped[key] = {
+                                                floor: entry.floor,
+                                                housekeeper_id: entry.housekeeper_id,
+                                                rooms: []
+                                            };
+                                        }
+                                        grouped[key].rooms.push(entry.room_id);
+                                    });
+
+                                    Object.values(grouped).forEach(entry => {
+                                        const row = document.createElement("tr");
+                                        row.innerHTML = `
+                                            <td>${entry.floor}</td>
+                                            <td>${entry.housekeeper_id}</td>
+                                            <td>${entry.rooms.join(", ")}</td>
+                                        `;
+                                        tableBody.appendChild(row);
+                                    });
+
+                                } else {
+                                    tableBody.innerHTML = `
+                                        <tr><td colspan="3" style="text-align:center;">No roster data for this day.</td></tr>
+                                    `;
                                 }
-                            });
-                            
-                            // Display the organized roster data
-                            Object.values(floorMap).forEach(floorData => {
-                                const row = document.createElement("tr");
-                                row.innerHTML = `
-                                    <td>Level ${floorData.floor}</td>
-                                    <td>Housekeeper #${floorData.housekeeper}</td>
-                                    <td>${floorData.rooms.map(room => `<span class="room-highlight">${room}</span>`).join(", ")}</td>
+                            })
+                            .catch(err => {
+                                console.error("Roster fetch error:", err);
+                                tableBody.innerHTML = `
+                                    <tr><td colspan="3" style="text-align:center; color:red;">Failed to load roster.</td></tr>
                                 `;
-                                rosterTableBody.appendChild(row);
                             });
-                            
-                            if (Object.keys(floorMap).length === 0) {
-                                const row = document.createElement("tr");
-                                row.innerHTML = `<td colspan="3">No roster data available for this day.</td>`;
-                                rosterTableBody.appendChild(row);
-                            }
-                        } else {
-                            const row = document.createElement("tr");
-                            row.innerHTML = `<td colspan="3">No roster data available for this day.</td>`;
-                            rosterTableBody.appendChild(row);
-                        }
-                    })
-                    .catch(error => {
-                        console.error("Error fetching roster:", error);
-                        const row = document.createElement("tr");
-                        row.innerHTML = `<td colspan="3">Error loading roster data. Please try again later.</td>`;
-                        rosterTableBody.appendChild(row);
+                    }
+
+                    prevBtn.addEventListener("click", function () {
+                        currentDate.setDate(currentDate.getDate() - 1);
+                        loadRoster(currentDate);
                     });
+
+                    nextBtn.addEventListener("click", function () {
+                        currentDate.setDate(currentDate.getDate() + 1);
+                        loadRoster(currentDate);
+                    });
+
+                    loadRoster(currentDate); // Initial load
+                });
+                                
+
+
+            </script>
+
+            <style>
+                .calendar {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
                 }
 
-                document.getElementById("roster-prev-day").addEventListener("click", () => {
-                    currentDate.setDate(currentDate.getDate() - 1);
-                    updateRosterView(currentDate);
-                });
+                .week {
+                    display: flex;
+                }
 
-                document.getElementById("roster-next-day").addEventListener("click", () => {
-                    currentDate.setDate(currentDate.getDate() + 1);
-                    updateRosterView(currentDate);
-                });
+                .day {
+                    width: 30px;
+                    height: 30px;
+                    margin: 2px;
+                    background-color: #f0f0f0;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    cursor: pointer;
+                }
 
-                updateRosterView(currentDate);
+                .room-details, .roster-details {
+                    margin-top: 20px;
+                }
+
+                .room-type {
+                    margin-bottom: 10px;
+                }
+
+                .hidden {
+                    display: none;
+                }
+                
+                .card {
+                    margin-bottom: 30px;
+                    padding: 20px;
+                    border: 1px solid #ddd;
+                    border-radius: 5px;
+                }
+
+                /* Styling for the roster table */
+                #roster-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 20px;
+                }
+
+                #roster-table th, #roster-table td {
+                    border: 1px solid #ddd;
+                    padding: 10px;
+                    text-align: center;
+                }
+
+                #roster-table th {
+                    background-color: #f2f2f2;
+                }
+
+                .room-highlight {
+                    background-color: #ffcccb; /* Highlight for rooms needing cleaning */
+                }
+
+            </style>
+
+
+<script>
+    document.getElementById("login-btn").addEventListener("click", function() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    //hardcoded
+    const correctEmail = "admin@puki.com";
+    const correctPassword = "pw";  
+
+    if (email === correctEmail && password === correctPassword) {
+        document.getElementById("login-container").style.display = "none";
+        document.getElementById("admin-container").style.display = "block";
+    } else {
+        document.getElementById("login-error").textContent = "Invalid email or password!";
+    }
+});
+
+document.getElementById("add-promo-btn").addEventListener("click", function() {
+        // get form data
+        const promoName = document.getElementById("promo-name").value;
+        const promoCode = document.getElementById("promo-code").value;
+        const promoStart = document.getElementById("promo-start").value;
+        const promoEnd = document.getElementById("promo-end").value;
+        const promoDiscount = document.getElementById("promo-discount").value;
+        const promoRoomType = document.getElementById("promo-room-type").value;
+
+        if (!promoName || !promoCode || !promoStart || !promoEnd || !promoDiscount) {
+            alert("Please fill in all fields.");
+            return;
+        }
+
+        const table = document.getElementById("promotions-table").getElementsByTagName('tbody')[0];
+        const newRow = table.insertRow();
+
+        const cell1 = newRow.insertCell(0);
+        const cell2 = newRow.insertCell(1);
+        const cell3 = newRow.insertCell(2);
+        const cell4 = newRow.insertCell(3);
+        const cell5 = newRow.insertCell(4);
+        const cell6 = newRow.insertCell(5);
+        const cell7 = newRow.insertCell(6);
+
+        cell1.textContent = promoName;
+        cell2.textContent = promoCode;
+        cell3.textContent = promoStart;
+        cell4.textContent = promoEnd;
+        cell5.textContent = promoDiscount + "%";
+        cell6.textContent = promoRoomType.charAt(0).toUpperCase() + promoRoomType.slice(1);
+
+        const editButton = document.createElement("button");
+        editButton.classList.add("action-btn", "edit");
+        editButton.textContent = "Edit";
+        
+        const deleteButton = document.createElement("button");
+        deleteButton.classList.add("action-btn", "delete");
+        deleteButton.textContent = "Delete";
+        
+        cell7.appendChild(editButton);
+        cell7.appendChild(deleteButton);
+
+        // clear form fields aft adding promo
+        document.getElementById("promo-name").value = "";
+        document.getElementById("promo-code").value = "";
+        document.getElementById("promo-start").value = "";
+        document.getElementById("promo-end").value = "";
+        document.getElementById("promo-discount").value = "";
+        document.getElementById("promo-room-type").value = "all"; 
+
+        deleteButton.addEventListener("click", function() {
+            table.deleteRow(newRow.rowIndex);
+        });
+
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const navLinks = document.querySelectorAll('.nav-link');
+        const pages = document.querySelectorAll('.page');
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+
+                navLinks.forEach(link => link.classList.remove('active'));
+                pages.forEach(page => page.classList.remove('active'));
+
+                link.classList.add('active');
+                const pageId = link.getAttribute('data-page');
+                document.getElementById(pageId).classList.add('active');
             });
+        });
 
-            // Call updateRosterView() on page load to populate the table
-            window.onload = updateRosterView(currentDate);
-        </script>
+        document.getElementById('promotion-page').classList.add('active');
+    });
 
-        <style>
-            .calendar-day.empty { background-color: #f0f0f0; }
-            .room-details { margin-top: 20px; }
-            .room-type { margin-bottom: 10px; }
-            .hidden { display: none; }
-            .room-highlight { background-color: #ffcccb; }
-        </style>
-    </div>
-</body>
-</html>
+
+
+        
+
+        function deleteRow(button) {
+            button.parentElement.parentElement.remove();
+                    }
+
+                    document.addEventListener("DOMContentLoaded", function() {
+        const calendar = document.getElementById("availability-calendar");
+        const currentMonth = document.getElementById("current-month");
+        const prevMonthBtn = document.getElementById("prev-month");
+        const nextMonthBtn = document.getElementById("next-month");
+        const roomDetails = document.getElementById("room-details");
+        const selectedDateDisplay = document.getElementById("selected-date");
+        const singleCount = document.getElementById("single-count");
+        const doubleCount = document.getElementById("double-count");
+        const familyCount = document.getElementById("family-count");
+        const addBackupRoomBtn = document.getElementById("add-backup-room");
+        
+        let currentDate = new Date();
+        let roomAvailability = {}; 
+        
+        function generateCalendar(date) {
+            calendar.innerHTML = ""; // clear previous calendar
+            currentMonth.textContent = date.toLocaleString("default", { month: "long", year: "numeric" });
+            
+            const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+            const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+            
+            for (let i = 0; i < firstDay; i++) {
+                calendar.innerHTML += '<div class="calendar-day empty"></div>';
+            }
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                let dayElement = document.createElement("div");
+                dayElement.classList.add("calendar-day");
+                dayElement.textContent = day;
+                dayElement.dataset.date = `${date.getFullYear()}-${date.getMonth() + 1}-${day}`;
+                
+                dayElement.addEventListener("click", function() {
+                    showRoomDetails(this.dataset.date);
+                });
+                
+                calendar.appendChild(dayElement);
+            }
+        }
+        
+        function showRoomDetails(date) {
+            selectedDateDisplay.textContent = date;
+            let availability = roomAvailability[date] || { single: 0, double: 0, family: 0 };
+            singleCount.textContent = availability.single;
+            doubleCount.textContent = availability.double;
+            familyCount.textContent = availability.family;
+            roomDetails.classList.remove("hidden");
+        }
+        
+        addBackupRoomBtn.addEventListener("click", function() {
+            let date = selectedDateDisplay.textContent;
+            if (!roomAvailability[date]) {
+                roomAvailability[date] = { single: 1, double: 0, family: 0 };
+            } else {
+                roomAvailability[date].single++;
+            }
+            showRoomDetails(date);
+        });
+        
+        prevMonthBtn.addEventListener("click", function() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            generateCalendar(currentDate);
+        });
+        
+        nextMonthBtn.addEventListener("click", function() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            generateCalendar(currentDate);
+        });
+        
+        generateCalendar(currentDate);
+    });
+
+</script>
+
+
+
+
+

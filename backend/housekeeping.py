@@ -25,89 +25,97 @@ def housekeeping():
     try:
         data = request.get_json()
         room_id = data.get("room_id")
-        floor = int(room_id[:-2])
-        if not room_id or floor is None:
-            return jsonify({"code": 400, "message": "room_id is required"}), 400
+
+        if not room_id:
+            return jsonify({"code": 400, "message": "room_id is required."}), 400
+
+        # Derive floor from room_id
+        try:
+            floor = int(str(room_id)[0])
+        except (TypeError, ValueError):
+            return jsonify({"code": 400, "message": "Invalid room_id format."}), 400
 
         today = datetime.today().strftime("%Y-%m-%d")
 
-        # 1. Fetch housekeeper on the same floor as room from Housekeeper
-        housekeeper_response = invokes.invoke_http(
-            f"{HOUSEKEEPER_URL}/housekeeper/floor/{floor}",
-            method="GET"
-        )
+        # Check today's roster for someone already assigned to this floor
+        assigned_housekeeper = None
+        roster_response = invokes.invoke_http(f"{ROSTER_URL}/roster/{today}", method="GET")
 
-        if housekeeper_response.get("code") != 200:
-            return jsonify({"code": 404, "message": f"No housekeeper available on floor {floor}."}), 404
+        if roster_response.get("code") == 200:
+            for entry in roster_response["data"]["roster"]:
+                if entry["floor"] == floor:
+                    assigned_housekeeper = entry["housekeeper_id"]
+                    print(f"[INFO] Reusing housekeeper {assigned_housekeeper} for floor {floor}")
+                    break
 
-        housekeeper_data = housekeeper_response.get("data", {})
-        assigned_housekeeper = housekeeper_data.get("housekeeper_id")
-        housekeeper_floor = housekeeper_data.get("floor")
-
+        # If none yet, fetch housekeeper for this floor 
         if not assigned_housekeeper:
-            return jsonify({"code": 404, "message": f"No housekeeper found for floor {floor}."}), 404
+            housekeeper_response = invokes.invoke_http(
+                f"{HOUSEKEEPER_URL}/housekeeper/floor/{floor}",
+                method="GET"
+            )
 
-        # 2. Fetch actual floor of the room from Room service to validate
-        room_details_response = invokes.invoke_http(
-            f"{ROOM_URL}/room/{room_id}",
-            method="GET"
-        )
+            if housekeeper_response.get("code") == 200:
+                assigned_housekeeper = housekeeper_response["data"]["housekeeper_id"]
+            else:
+                print(f"[INFO] No housekeeper found on floor {floor}, creating one...")
+                create_response = invokes.invoke_http(
+                    f"{HOUSEKEEPER_URL}/housekeeper",
+                    method="POST",
+                    json={
+                        "name": f"Auto-HK-Floor-{floor}",
+                        "floor": floor
+                    }
+                )
 
-        if room_details_response.get("code") != 200:
+                if create_response.get("code") != 201:
+                    return jsonify({"code": 500, "message": f"Failed to auto-create housekeeper for floor {floor}."}), 500
+
+                assigned_housekeeper = create_response["data"]["housekeeper_id"]
+                print(f"[INFO] Auto-assigned new housekeeper ID {assigned_housekeeper} to floor {floor}")
+
+        # Confirm room exists
+        room_response = invokes.invoke_http(f"{ROOM_URL}/room/{room_id}", method="GET")
+        if room_response.get("code") != 200:
             return jsonify({"code": 404, "message": "Room not found."}), 404
 
-        room_data = room_details_response.get("data", {})
+        room_data = room_response["data"]
         actual_room_floor = room_data.get("floor")
 
-        if actual_room_floor != housekeeper_floor:
+        if actual_room_floor != floor:
             return jsonify({
                 "code": 400,
-                "message": f"Housekeeper is not on floor {actual_room_floor}. Floor mismatch."
+                "message": f"Room floor mismatch. Expected floor {floor}, but got {actual_room_floor}"
             }), 400
-        
-        # 3. Add the housekeeper assignment to the Roster
+
+        # Create roster entry
         roster_payload = {
             "housekeeper_id": assigned_housekeeper,
-            "floor": housekeeper_floor,
+            "room_id": room_id,
+            "floor": floor,
             "date": today
         }
-        print(f"DEBUG: Adding to Roster: {roster_payload}")
-        try:
-            roster_response = invokes.invoke_http(
-                f"{ROSTER_URL}/roster/new",
-                method="POST",
-                json=roster_payload
-            )
-            print(f"DEBUG: Roster insert response: {roster_response}")
-            if roster_response.get("code") != 201:
-                print(f"[WARN] Roster insertion failed: {roster_response}")
-        except Exception as e:
-            print(f"[ERROR] Failed to update roster: {str(e)}")
-        
-        # 4. Update room status to CLEANING via Room service
-        room_update_url = f"{ROOM_URL}/room/{room_id}/update-status"
-        print(f"DEBUG: Updating room status at URL: {room_update_url}")
-        try:
-            room_response = invokes.invoke_http(
-                room_update_url,
-                method="PUT",
-                json={"status": "CLEANING"}
-            )
-            print(f"DEBUG: Room update response: {room_response}")
-            
-            if not isinstance(room_response, dict):
-                print(f"DEBUG: Room response is not a dict: {room_response}")
-                return jsonify({"code": 400, "message": "Failed to update room status - invalid response format"}), 400
-                
-            if room_response.get("code") != 200:
-                print(f"DEBUG: Room update failed with code: {room_response.get('code')} - {room_response.get('message', 'No error message')}")
-                return jsonify({"code": 500, "message": f"Failed to update room status: {room_response.get('message', 'Unknown error')}"}), 500
-                
-        except Exception as e:
-            print(f"DEBUG: Exception updating room status: {str(e)}")
-            return jsonify({"code": 500, "message": "Error updating room status."}), 500
 
-        # 3. Simulate cleaning cycle in background
+        print(f"[DEBUG] Adding to Roster: {roster_payload}")
+        try:
+            roster_create = invokes.invoke_http(
+                f"{ROSTER_URL}/roster/new", method="POST", json=roster_payload
+            )
+            if roster_create.get("code") != 201:
+                print(f"[WARN] Failed to insert roster: {roster_create}")
+        except Exception as e:
+            print(f"[ERROR] Failed to insert roster: {str(e)}")
+
+        # Update room status to CLEANING
+        update_response = invokes.invoke_http(
+            f"{ROOM_URL}/room/{room_id}/update-status",
+            method="PUT",
+            json={"status": "CLEANING"}
+        )
+        if update_response.get("code") != 200:
+            return jsonify({"code": 500, "message": "Failed to update room status."}), 500
+
+        # Start simulated cleaning
         thread = threading.Thread(target=simulate_cleaning_cycle, args=(room_id,))
         thread.start()
 
@@ -118,8 +126,9 @@ def housekeeping():
         }), 201
 
     except Exception as e:
-        print("Error:", str(e))
-        return jsonify({"code": 500, "message": "An unexpected error occurred."}), 500
+        print("[ERROR] Housekeeping failure:", str(e))
+        return jsonify({"code": 500, "message": "Unexpected error during housekeeping."}), 500
+
 
 # simulate cleaning cycle
 def simulate_cleaning_cycle(room_id):

@@ -15,20 +15,15 @@ db = SQLAlchemy(app)
 class Roster(db.Model):
     __tablename__ = 'roster'
 
-    date = db.Column(db.Date, nullable=False)
+    date = db.Column(db.Date, primary_key=True)
+    room_id = db.Column(db.String(36), primary_key=True)
     floor = db.Column(db.Integer, nullable=False)
-    room_id = db.Column(db.String(36), nullable=True)
     housekeeper_id = db.Column(db.Integer, nullable=False)
-    name = db.Column(db.String(50), nullable=False)
     completed = db.Column(db.Boolean, default=False)
-    
-    __table_args__ = (
-        db.PrimaryKeyConstraint('date', 'room_id', 'housekeeper_id'),
-    )
 
     def json(self):
         return {
-            "date": self.date, 
+            "date": self.date,
             "room_id": self.room_id,
             "floor": self.floor,
             "housekeeper_id": self.housekeeper_id,
@@ -55,37 +50,51 @@ def get_all_roster():
 @app.route("/roster/new", methods=["POST"])
 def create_roster():
     data = request.get_json()
-
-    # Convert the date string to a datetime object
     try:
-        date_obj = datetime.strptime(data["date"], "%Y-%m-%d").date()
-    except ValueError:
-        return jsonify({"code": 400, "error": "Invalid date format. Please use YYYY-MM-DD."}), 400
+        room_id = data["room_id"]
+        housekeeper_id = data["housekeeper_id"]
+        date_str = data["date"]
 
-    # Check if the roster entry already exists for the given date, floor, and room_id
-    existing_roster = Roster.query.filter_by(date=data["date"], floor=data["floor"], room_id=data["room_id"]).first()
-    
-    if existing_roster:
-        return jsonify({"code": 400, "error": "Roster entry already exists for this date, floor, and room."}), 400
+        # Parse date
+        try:
+            datetime.strptime(date_str, "%Y-%m-%d")
+        except ValueError:
+            return jsonify({"code": 400, "error": "Invalid date format. Use YYYY-MM-DD."}), 400
 
-    try:
-        # Create a new roster entry
-        roster = Roster(
-            date=data["date"],
-            room_id=data["room_id"],
-            floor=data["floor"],
-            housekeeper_id=data["housekeeper_id"],
-            name=data["name"],
-            completed=data.get("completed", False)
+        # Derive floor from room_id
+        floor = int(str(room_id)[0])
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+
+        # Check if this roster entry already exists
+        existing = Roster.query.filter_by(date=date_obj, room_id=room_id).first()
+
+        if existing:
+            return jsonify({"code": 400, "error": "Roster entry already exists."}), 400
+
+        # Create new roster entry
+        new_entry = Roster(
+            date=date_obj,
+            room_id=room_id,
+            floor=floor,
+            housekeeper_id=housekeeper_id,
+            completed=False
         )
-
-        db.session.add(roster)
+        db.session.add(new_entry)
         db.session.commit()
-        return jsonify({"code": 201, "message": "Roster entry created successfully.", "data": roster.json()}), 201
+
+        return jsonify({
+            "code": 201,
+            "message": "Roster entry created successfully.",
+            "data": new_entry.json()
+        }), 201
+
+    except KeyError as e:
+        return jsonify({"code": 400, "error": f"Missing field: {str(e)}"}), 400
     except Exception as e:
         db.session.rollback()
-        print("Error creating roster entry:", str(e))
-        return jsonify({"code": 500, "error": "Error creating roster entry."}), 500
+        print(f"[ERROR] Roster creation failed: {str(e)}")
+        return jsonify({"code": 500, "error": "Internal server error."}), 500
+
 
 # Get roster by housekeeper ID
 @app.route("/roster/housekeeper/<int:housekeeper_id>", methods=["GET"])

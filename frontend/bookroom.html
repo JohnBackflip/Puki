@@ -319,10 +319,8 @@
                   localStorage.setItem("bookingDetails", JSON.stringify(data.data));
                   window.location.href = "bookingconfirmation.html";
                 })
-                .catch(err => {
-                  console.error("Booking error:", err);
-                  alert("Something went wrong while booking.");
-                });
+                
+                
             });
           });
         });

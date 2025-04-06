@@ -14,9 +14,10 @@ BOOKING_URL = environ.get('BOOKING_URL', 'http://booking:5002')
 GUEST_URL = environ.get('GUEST_URL', 'http://guest:5011')
 HOUSEKEEPING_URL = environ.get('HOUSEKEEPING_URL', 'http://housekeeping:5006')
 
+
 # RabbitMQ Connection
 def get_rabbitmq_channel():
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    connection = pika.BlockingConnection(pika.ConnectionParameters('puki-rabbit'))
     channel = connection.channel()
     channel.queue_declare(queue='sms_queue', durable=True)
     return channel, connection
@@ -74,9 +75,12 @@ def checkout():
             return jsonify({"code": 400, "message": "Full name does not match booking record."}), 400
 
         # 3. Trigger housekeeping
+        
         room_json = {"room_id": room_id}
+        print("[DEBUG] About to send room ID to housekeeping:", room_json)
+
         print("Triggering housekeeping for room:", room_id)
-        housekeeping_result = invokes.invoke_http(HOUSEKEEPING_URL, method="POST", json=room_json)
+        housekeeping_result = invokes.invoke_http(f"{HOUSEKEEPING_URL}/housekeeping", method="POST", json=room_json)
         print("Housekeeping result:", housekeeping_result)
 
         room_update_url = f"http://room:5008/room/{room_id}/update-status"
