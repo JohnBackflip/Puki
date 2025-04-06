@@ -13,10 +13,11 @@ CORS(app)
 BOOKING_URL = environ.get('BOOKING_URL', 'http://booking:5002')
 GUEST_URL = environ.get('GUEST_URL', 'http://guest:5011')
 HOUSEKEEPING_URL = environ.get('HOUSEKEEPING_URL', 'http://housekeeping:5006')
+NOTIFICATION_URL = environ.get('NOTIFICATION_URL', 'http://notification:5007/notify')
 
 # RabbitMQ Connection
 def get_rabbitmq_channel():
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    connection = pika.BlockingConnection(pika.ConnectionParameters('puki-rabbit'))
     channel = connection.channel()
     channel.queue_declare(queue='sms_queue', durable=True)
     return channel, connection
@@ -82,22 +83,19 @@ def checkout():
         # 4. Send SMS with feedback form
         feedback_url = "https://forms.gle/dKzRvA4dDMhsrC8D6"
         sms_message = f"Thank you for staying with us, {name}! Please provide your feedback: {feedback_url}"
-        
         try:
-            channel, connection = get_rabbitmq_channel()
-            channel.basic_publish(
-                exchange='',
-                routing_key='sms_queue',
-                body=json.dumps({
-                    "message": sms_message,
-                    "recipient": mobile_number,
-                    "type": "SMS"
-                }),
-                properties=pika.BasicProperties(
-                    delivery_mode=2,  # make message persistent
-                )
-            )
-            connection.close()
+            msg = {
+            "message": sms_message,
+            "recipient": mobile_number,
+            "type": "SMS"
+            }
+            notification_result = invokes.invoke_http(NOTIFICATION_URL, method="POST", json=msg)
+            return notification_result
+            # Publish to RabbitMQ (Doesn't work anymore)
+            # channel, connection = get_rabbitmq_channel()
+            # message = json.dumps({'mobile_number': mobile_number, 'message': "Thank you for staying with Puki! We would love to hear your feedback: " + feedback_url})
+            # channel.basic_publish(exchange='', routing_key='sms_queue', body=message)
+            # connection.close()
         except Exception as e:
             print(f"Error sending SMS: {str(e)}")
             # Continue with checkout even if SMS fails
