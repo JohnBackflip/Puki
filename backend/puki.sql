@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS keycard (
     booking_id INT NOT NULL UNIQUE, 
     guest_id INT NOT NULL, 
     room_id VARCHAR(5) NOT NULL,
-    key_pin INT(6) UNIQUE NULL,  
+    key_pin INT NULL,  
     issued_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
     expires_at TIMESTAMP NULL, 
     FOREIGN KEY (booking_id) REFERENCES booking(booking_id) ON DELETE CASCADE,
@@ -118,7 +118,7 @@ INSERT INTO booking (guest_id, room_id, floor, check_in, check_out, room_type, p
 INSERT INTO keycard (booking_id, guest_id, room_id, key_pin, issued_at, expires_at) VALUES
 (1, 1, '101', 123456, '2025-04-03 10:00:00', '2025-04-06 10:00:00'),
 (2, 2, '102', 654321, '2025-04-04 10:00:00', '2025-04-07 10:00:00'),
-(4, 4, '202', 654321, '2025-04-06 10:00:00', '2025-04-09 10:00:00');
+(4, 4, '202', 321654, '2025-04-06 10:00:00', '2025-04-09 10:00:00');
 
 -- Insert data into roster
 INSERT INTO roster (date, floor, room_id, housekeeper_id, name, completed) VALUES

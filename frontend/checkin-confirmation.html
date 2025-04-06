@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Check-In Confirmation</title>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="container" style="margin-top: 50px; text-align: center;">
+    <h1>Welcome to Puki Hotel!</h1>
+    <p><strong>Your room details:</strong></p>
+    <p id="roomInfo">Loading room info...</p>
+    <p><strong>Your keycard PIN:</strong></p>
+    <p id="key_pin">Loading keycard info...</p>
+    <a href="index.html" class="btn btn-primary">Return to Home</a>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const bookingID = localStorage.getItem("checkedInBookingID");
+
+      if (!bookingID) {
+        document.getElementById("roomInfo").textContent = "Booking ID not found.";
+        return;
+      }
+
+      // Fetch booking details
+      fetch(`http://localhost:5002/booking/${bookingID}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.code === 200) {
+            const booking = data.data;
+            document.getElementById("roomInfo").textContent = `Room ${booking.room_id} on floor ${booking.floor}`;
+          } else {
+            document.getElementById("roomInfo").textContent = "Unable to retrieve booking details.";
+          }
+        });
+
+      // Fetch keycard by booking ID
+      fetch(`http://localhost:5012/keycard/${bookingID}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.code === 200) {
+            const pin = data.data.key_pin;
+            document.getElementById("key_pin").textContent = pin;
+            } else {
+            document.getElementById("key_pin").textContent = "Not found";
+            }
+        })
+        .catch(err => {
+            console.error("Error fetching keycard:", err);
+            document.getElementById("key_pin").textContent = "Error";
+        });
+    });
+  </script>
+</body>
+</html>
