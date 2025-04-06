@@ -146,6 +146,28 @@ def update_price_by_room_id(room_id: int):
 @app.route("/price/events", methods=["POST"])
 def adjust_prices_by_season():
     data = request.get_json()
+    
+    # Handle promotions
+    if "name" in data and "code" in data:
+        # This is a promotion submission
+        try:
+            # Validate required fields
+            required_fields = ["name", "code", "start_date", "end_date", "discount", "room_type"]
+            for field in required_fields:
+                if field not in data:
+                    return jsonify({"code": 400, "message": f"Missing required field: {field}"}), 400
+
+            # Store the promotion in a database
+            # For demonstration, we'll just return success
+            return jsonify({
+                "code": 201, 
+                "message": "Promotion created successfully", 
+                "data": {"promotion": data}
+            }), 201
+        except Exception as e:
+            return jsonify({"code": 500, "message": str(e)}), 500
+            
+    # Original seasonal pricing logic
     season = data.get("season", "").strip().lower()
 
     # Define festive multipliers
@@ -169,10 +191,35 @@ def adjust_prices_by_season():
 
     try:
         db.session.commit()
-        return jsonify({"season": season, "updated": updated_prices}), 200
+        return jsonify({"code": 200, "season": season, "updated": updated_prices}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"code": 500, "error": str(e)}), 500
+
+# Get promotions
+@app.route("/price/events", methods=["GET"])
+def get_promotions():
+    # In a real implementation, this would fetch from a database
+    # For demonstration, we'll return sample data
+    promotions = [
+        {
+            "name": "Early Bird Special",
+            "code": "EARLY25",
+            "start_date": "2025-05-01",
+            "end_date": "2025-05-31",
+            "discount": 25,
+            "room_type": "all"
+        },
+        {
+            "name": "Family Weekend",
+            "code": "FAMILY15",
+            "start_date": "2025-06-01",
+            "end_date": "2025-06-30",
+            "discount": 15,
+            "room_type": "family"
+        }
+    ]
+    return jsonify({"code": 200, "data": {"promotions": promotions}}), 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5003, debug=True)

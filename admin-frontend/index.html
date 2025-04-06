@@ -551,7 +551,7 @@
                     return;
                 }
 
-                fetch("http://localhost:8000/price/events", {
+                fetch("http://localhost:5003/price/events", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -575,7 +575,8 @@
 
             // 2. Fetch Promotions on Page Load
             document.addEventListener("DOMContentLoaded", function () {
-                fetch("http://localhost:8000/price/events")
+                // Load promotions
+                fetch("http://localhost:5003/price/events")
                     .then(response => response.json())
                     .then(data => {
                         if (data.code === 200 && Array.isArray(data.data.promotions)) {
@@ -600,16 +601,57 @@
                         }
                     })
                     .catch(error => console.error("Failed to load promotions:", error));
+
+                // Load initial room availability
+                fetch("http://localhost:5008/room")
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.code === 200) {
+                            // Process room data and update the UI
+                            updateRoomAvailabilityDisplay(data.data.rooms);
+                        }
+                    })
+                    .catch(error => console.error("Failed to load room availability:", error));
             });
 
-            // Room Availability
-            let roomAvailability = {
-                "2025-04-04": { single: 5, double: 3, family: 2 },
-                "2025-04-06": { single: 4, double: 2, family: 1 },
-                "2025-04-07": { single: 3, double: 4, family: 3 },
-                "2025-04-08": { single: 2, double: 1, family: 0 },
-                "2025-03-20": { single: 1, double: 0, family: 0 }
-            };
+            // Room Availability Data
+            let roomAvailability = {};
+
+            // Function to update room availability display
+            function updateRoomAvailabilityDisplay(rooms) {
+                if (!rooms) return;
+                
+                // Process the room data and update the roomAvailability object
+                const dateStr = new Date().toISOString().split("T")[0]; // Today's date
+                
+                // Count rooms by type
+                const countByType = {
+                    "Single": 0,
+                    "Double": 0,
+                    "Family": 0
+                };
+                
+                rooms.forEach(room => {
+                    if (room.availability === "VACANT") {
+                        if (room.room_type === "Single") countByType.Single++;
+                        else if (room.room_type === "Double") countByType.Double++;
+                        else if (room.room_type === "Family") countByType.Family++;
+                    }
+                });
+                
+                // Store in roomAvailability
+                roomAvailability[dateStr] = {
+                    single: countByType.Single,
+                    double: countByType.Double,
+                    family: countByType.Family
+                };
+                
+                // Update calendar with the new data
+                const availabilityCalendar = document.getElementById('availability-calendar');
+                if (availabilityCalendar) {
+                    generateAvailabilityCalendar(availabilityYear, availabilityMonth);
+                }
+            }
 
             function generateAvailabilityCalendar(year, month) {
                 const calendar = document.getElementById('availability-calendar');
@@ -674,7 +716,7 @@
                     }
                 };
 
-                fetch("http://localhost:8000/room/available", {
+                fetch("http://localhost:5008/room/available", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -683,7 +725,7 @@
                 })
                 .then(res => res.json())
                 .then(response => {
-                    if (response.code === 200) {
+                    if (response.code === 200 || response.code === 201) {
                         alert("✅ Room availability updated.");
                         roomAvailability[selectedDate] = {
                             single: singleCount,
@@ -691,10 +733,13 @@
                             family: familyCount
                         };
                     } else {
-                        alert("❌ Failed to update availability.");
+                        alert("❌ Failed to update availability: " + (response.message || "Unknown error"));
                     }
                 })
-                .catch(err => console.error("Error updating availability:", err));
+                .catch(err => {
+                    console.error("Error updating availability:", err);
+                    alert("❌ Error connecting to server. Please try again later.");
+                });
             });
 
             // Initialize calendar
@@ -739,7 +784,7 @@
                     document.getElementById("roster-current-date").textContent = date.toDateString();
                     rosterTableBody.innerHTML = "";
 
-                    fetch(`http://localhost:4001/roster/${formattedDate}`, {
+                    fetch(`http://localhost:5009/roster/${formattedDate}`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json'
@@ -753,25 +798,51 @@
                     })
                     .then(rosterData => {
                         if (rosterData.code === 200) {
-                            const rosterEntries = rosterData.data.roster;
-                            if (rosterEntries.length > 0) {
-                                rosterEntries.forEach(entry => {
-                                    const row = document.createElement("tr");
-                                    row.innerHTML = `
-                                        <td>Level ${entry.floor}</td>
-                                        <td>${entry.assigned_housekeeper}</td>
-                                        <td>${entry.rooms.map(room => `<span class="room-highlight">${room}</span>`).join(", ")}</td>
-                                    `;
-                                    rosterTableBody.appendChild(row);
-                                });
-                            } else {
+                            const rosterEntries = rosterData.data.roster || [];
+                            
+                            // Group roster entries by floor
+                            const floorMap = {};
+                            rosterEntries.forEach(entry => {
+                                if (!floorMap[entry.floor]) {
+                                    floorMap[entry.floor] = {
+                                        floor: entry.floor,
+                                        housekeeper: entry.housekeeper_id,
+                                        rooms: []
+                                    };
+                                }
+                                if (entry.room_id) {
+                                    floorMap[entry.floor].rooms.push(entry.room_id);
+                                }
+                            });
+                            
+                            // Display the organized roster data
+                            Object.values(floorMap).forEach(floorData => {
+                                const row = document.createElement("tr");
+                                row.innerHTML = `
+                                    <td>Level ${floorData.floor}</td>
+                                    <td>Housekeeper #${floorData.housekeeper}</td>
+                                    <td>${floorData.rooms.map(room => `<span class="room-highlight">${room}</span>`).join(", ")}</td>
+                                `;
+                                rosterTableBody.appendChild(row);
+                            });
+                            
+                            if (Object.keys(floorMap).length === 0) {
                                 const row = document.createElement("tr");
                                 row.innerHTML = `<td colspan="3">No roster data available for this day.</td>`;
                                 rosterTableBody.appendChild(row);
                             }
+                        } else {
+                            const row = document.createElement("tr");
+                            row.innerHTML = `<td colspan="3">No roster data available for this day.</td>`;
+                            rosterTableBody.appendChild(row);
                         }
                     })
-                    .catch(error => console.error("Error fetching roster:", error));
+                    .catch(error => {
+                        console.error("Error fetching roster:", error);
+                        const row = document.createElement("tr");
+                        row.innerHTML = `<td colspan="3">Error loading roster data. Please try again later.</td>`;
+                        rosterTableBody.appendChild(row);
+                    });
                 }
 
                 document.getElementById("roster-prev-day").addEventListener("click", () => {

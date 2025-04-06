@@ -92,6 +92,33 @@ def get_roster_by_housekeeper_id(housekeeper_id):
         return jsonify({"data": [r.json() for r in roster_list]}), 200
     return jsonify({"message": "No roster found for the provided housekeeper ID."}), 404
 
+# Get roster by date
+@app.route("/roster/<string:date>", methods=["GET"])
+def get_roster_by_date(date):
+    try:
+        # Convert string date to datetime.date object
+        date_obj = datetime.strptime(date, "%Y-%m-%d").date()
+    except ValueError:
+        return jsonify({
+            "code": 400,
+            "message": "Invalid date format. Please use YYYY-MM-DD."
+        }), 400
+
+    roster_list = Roster.query.filter_by(date=date_obj).all()
+    
+    if roster_list:
+        return jsonify({
+            "code": 200,
+            "data": {
+                "roster": [r.json() for r in roster_list]
+            }
+        }), 200
+    
+    return jsonify({
+        "code": 404,
+        "message": "No roster found for the provided date."
+    }), 404
+
 # Update a roster entry (status change)
 @app.route("/roster/<string:date>/<string:room_id>", methods=["PUT"])
 def update_roster(date, room_id):

@@ -22,7 +22,7 @@ class Room(db.Model):
     room_type = db.Column(db.Enum("Single", "Family", "PresidentialSuite"), nullable=False)
     key_pin = db.Column(db.Integer, nullable=False)
     floor = db.Column(db.Integer, nullable=False)
-    status = db.Column(db.Enum("VACANT", "OCCUPIED", "CLEANING"), default="VACANT")
+    availability = db.Column(db.Enum("VACANT", "OCCUPIED", "CLEANING"), default="VACANT")
     
     def json(self):
         return {
@@ -30,7 +30,7 @@ class Room(db.Model):
             "room_type": self.room_type,
             "key_pin": self.key_pin,
             "floor": self.floor,
-            "status": self.status
+            "availability": self.availability
         }
     
 with app.app_context():
@@ -42,7 +42,7 @@ def health():
     return {"status": "healthy"}
 
 # Create new room
-@app.route("/room", methods=["POST"])
+@app.route("/room/create", methods=["POST"])
 def create_room():
     data = request.get_json()
 
@@ -60,7 +60,7 @@ def create_room():
         room_id=room_id,
         room_type=room_type,
         floor=floor,
-        status="VACANT"
+        availability="VACANT"
     )
     
     try:
@@ -82,9 +82,9 @@ def get_room(room_id):
     return jsonify({"code": 200, "data": room.json()}), 200
 
 # get rooms by status
-@app.route("/room/status/<string:status>", methods=["GET"])
-def get_rooms_by_status(status):
-    rooms = db.session.scalars(db.select(Room).filter_by(status=status)).all()
+@app.route("/room/availability/<string:availability>", methods=["GET"])
+def get_rooms_by_availability(availability):
+    rooms = db.session.scalars(db.select(Room).filter_by(availability=availability)).all()
     return jsonify({
         "code": 200,
         "data": {
@@ -92,74 +92,7 @@ def get_rooms_by_status(status):
         }
     }), 200
 
-#update room status
-@app.route("/room/<string:room_id>/update-status", methods=["PUT"])
-def update_room_status(room_id):
-    room = db.session.scalar(db.select(Room).filter_by(room_id=room_id))
-    if not room:
-        return jsonify({"code": 404, "message": "Room not found."}), 404
-
-    data = request.get_json()
-    new_status = data.get("status")
-
-    if new_status not in ["VACANT", "OCCUPIED", "CLEANING", "COMPLETED"]:
-        return jsonify({"code": 400, "message": "Invalid status value."}), 400
-
-    room.status = new_status
-    try:
-        db.session.commit()
-        return jsonify({"code": 200, "data": room.json()}), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"code": 500, "message": str(e)}), 500
-
-#next avai rooms
-@app.route("/room/next-available/<string:room_type>", methods=["GET"])
-def get_next_available_room(room_type):
-    date_str = request.args.get("date")
-
-    if not date_str:
-        return jsonify({"code": 400, "message": "Date is required as query param."}), 400
-
-    try:
-        check_date = datetime.strptime(date_str, "%Y-%m-%d").date()
-    except ValueError:
-        return jsonify({"code": 400, "message": "Invalid date format. Use YYYY-MM-DD."}), 400
-
-    # Get vacant rooms of the requested type
-    vacant_rooms = db.session.scalars(
-        db.select(Room).filter_by(status="VACANT", room_type=room_type)
-    ).all()
-
-    if not vacant_rooms:
-        return jsonify({"code": 404, "message": "No vacant rooms of this type."}), 404
-
-    booking_url = environ.get("BOOKING_URL", "http://booking:5002")
-
-    for room in vacant_rooms:
-        booking_check_url = f"{booking_url}/booking?room_id={room.room_id}&date={date_str}"
-        try:
-            booking_response = requests.get(booking_check_url)
-            if booking_response.status_code == 404:
-                # This room is free on the given date
-                return jsonify({
-                    "code": 200,
-                    "data": {
-                        "room_id": room.room_id,
-                        "floor": room.floor,
-                        "room_type": room.room_type
-                    }
-                }), 200
-        except requests.exceptions.RequestException as e:
-            print(f"Booking service request failed: {e}")
-            continue
-
-    return jsonify({
-        "code": 404,
-        "message": f"No {room_type} rooms available on {date_str}."
-    }), 404
-
-
+# get rooms by type
 @app.route("/room/type/<string:room_type>", methods=["GET"])
 def get_rooms_by_type(room_type):
     valid_types = ["Single", "Family", "PresidentialSuite"]
@@ -173,6 +106,74 @@ def get_rooms_by_type(room_type):
         return jsonify({"code": 404, "message": f"No rooms found for type {room_type}."}), 404
 
     return jsonify({"code": 200, "data": {"rooms": [room.json() for room in rooms]}}), 200
+
+# Get all rooms
+@app.route("/room", methods=["GET"])
+def get_all_rooms():
+    rooms = db.session.scalars(db.select(Room)).all()
+    return jsonify({
+        "code": 200,
+        "data": {
+            "rooms": [room.json() for room in rooms]
+        }
+    }), 200
+
+# Update room availability
+@app.route("/room/available", methods=["POST"])
+def update_room_availability():
+    data = request.get_json()
+    
+    # Validate request data
+    if not data or "date" not in data or "availability" not in data:
+        return jsonify({"code": 400, "message": "Invalid request data."}), 400
+        
+    date_str = data["date"]
+    availability = data["availability"]
+    
+    try:
+        # Get all rooms by type
+        single_rooms = db.session.scalars(db.select(Room).filter_by(room_type="Single")).all()
+        double_rooms = db.session.scalars(db.select(Room).filter_by(room_type="Family")).all()
+        family_rooms = db.session.scalars(db.select(Room).filter_by(room_type="PresidentialSuite")).all()
+        
+        # For each room type, set the first N rooms to VACANT and the rest to OCCUPIED
+        # where N is the availability number
+        
+        # Update Single rooms
+        for i, room in enumerate(single_rooms):
+            if i < availability["single"]:
+                room.availability = "VACANT"
+            else:
+                room.availability = "OCCUPIED"
+        
+        # Update Double rooms
+        for i, room in enumerate(double_rooms):
+            if i < availability["double"]:
+                room.availability = "VACANT"
+            else:
+                room.availability = "OCCUPIED"
+                
+        # Update Family rooms
+        for i, room in enumerate(family_rooms):
+            if i < availability["family"]:
+                room.availability = "VACANT"
+            else:
+                room.availability = "OCCUPIED"
+        
+        # Commit the changes to the database
+        db.session.commit()
+        
+        return jsonify({
+            "code": 200,
+            "message": "Room availability updated successfully.",
+            "data": {
+                "date": date_str,
+                "availability": availability
+            }
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"code": 500, "message": f"Error updating room availability: {str(e)}"}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5008, debug=True)
