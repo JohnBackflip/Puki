@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS keycard (
     booking_id INT NOT NULL UNIQUE, 
     guest_id INT NOT NULL, 
     room_id VARCHAR(5) NOT NULL,
-    key_pin INT(6) UNIQUE NULL,  
+    key_pin INT NULL,  
     issued_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
     expires_at TIMESTAMP NULL, 
     FOREIGN KEY (booking_id) REFERENCES booking(booking_id) ON DELETE CASCADE,

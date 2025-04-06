@@ -25,7 +25,7 @@ class Keycard(db.Model):
     booking_id = db.Column(db.Integer, nullable=False, unique=True)  # Links to a booking
     guest_id = db.Column(db.Integer, nullable=False)  # Customer using the key
     room_id = db.Column(db.String(5), nullable=False)
-    key_pin = db.Column(db.Integer, nullable=False, unique=True)  # 6-digit PIN
+    key_pin = db.Column(db.Integer, nullable=False)  # 6-digit PIN
     issued_at = db.Column(db.DateTime, default=datetime.utcnow)
     expires_at = db.Column(db.DateTime, nullable=True)  # Null if not expired
 
