@@ -157,7 +157,7 @@ services:
     networks:
       - puki-network
     environment:
-      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
+      - DATABASE_URL=mysql+mysqlconnector://root@host.docker.internal:3306/puki
     healthcheck:
       test: ["CMD", "python", "-c", "import http.client; conn = http.client.HTTPConnection('localhost:5011'); conn.request('GET', '/health'); response = conn.getresponse(); exit(0 if response.status == 200 else 1)"]
       interval: 10s
@@ -197,7 +197,7 @@ services:
     networks:
       - puki-network
     environment:
-      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
+      - DATABASE_URL=mysql+mysqlconnector://root@host.docker.internal:3306/puki
     healthcheck:
       test: ["CMD", "python", "-c", "import http.client; conn = http.client.HTTPConnection('localhost:5014'); conn.request('GET', '/health'); response = conn.getresponse(); exit(0 if response.status == 200 else 1)"]
       interval: 10s
@@ -236,7 +236,7 @@ services:
     networks:
       - puki-network  
     environment:
-      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
+      - DATABASE_URL=mysql+mysqlconnector://root@host.docker.internal:3306/puki
     healthcheck:
       test: ["CMD", "python", "-c", "import http.client; conn = http.client.HTTPConnection('localhost:5012'); conn.request('GET', '/health'); response = conn.getresponse(); exit(0 if response.status == 200 else 1)"]
       interval: 10s
@@ -274,7 +274,7 @@ services:
     networks:
       - puki-network
     environment:
-      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
+      - DATABASE_URL=mysql+mysqlconnector://root@host.docker.internal:3306/puki
     healthcheck:
       test: ["CMD", "python", "-c", "import http.client; conn = http.client.HTTPConnection('localhost:5003'); conn.request('GET', '/health'); response = conn.getresponse(); exit(0 if response.status == 200 else 1)"]
       interval: 10s

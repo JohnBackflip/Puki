@@ -77,8 +77,8 @@ def get_price_by_room_type(room_type: str):
 #create a price
 @app.route("/prices/<room_id>", methods=["PUT"])
 def update_or_create_price(room_id: str):
-    data = request.get_json()
-    price = data.get('price')
+    new_price = request.get_json()
+    price = new_price.get('price')
 
     if not price:
         return jsonify({"error": "Missing required field: 'price'"}), 400
@@ -98,10 +98,10 @@ def update_or_create_price(room_id: str):
     try:
         db.session.commit()
         return jsonify({
-            "room_id": new_price.room_id,
-            "room_type": new_price.room_type,
-            "floor": new_price.floor,
-            "price": new_price.price
+            "room_id": room_id,
+            "room_type": new_price["room_type"],
+            "floor": new_price["floor"],
+            "price": price
         }), 201
     except IntegrityError:
         db.session.rollback()
