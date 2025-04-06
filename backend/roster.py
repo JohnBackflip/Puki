@@ -16,9 +16,10 @@ class Roster(db.Model):
     __tablename__ = 'roster'
 
     date = db.Column(db.Date, nullable=False)
-    room_id = db.Column(db.String(36), nullable=True)
     floor = db.Column(db.Integer, nullable=False)
+    room_id = db.Column(db.String(36), nullable=True)
     housekeeper_id = db.Column(db.Integer, nullable=False)
+    name = db.Column(db.String(50), nullable=False)
     completed = db.Column(db.Boolean, default=False)
     
     __table_args__ = (
@@ -74,6 +75,7 @@ def create_roster():
             room_id=data["room_id"],
             floor=data["floor"],
             housekeeper_id=data["housekeeper_id"],
+            name=data["name"],
             completed=data.get("completed", False)
         )
 

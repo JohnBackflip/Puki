@@ -105,8 +105,8 @@ INSERT INTO room (room_id, room_type, key_pin, floor, availability) VALUES
 INSERT INTO booking (guest_id, room_id, floor, check_in, check_out, room_type, price) VALUES
 (1, '101', 1, '2025-04-03', '2025-04-05', 'Single', 100.00),
 (2, '102', 1, '2025-04-04', '2025-04-06', 'Family', 200.00),
-(3, NULL, NULL, '2025-04-05', '2025-04-07', 'PresidentialSuite', 500.00),
-(4, NULL, NULL, '2025-04-06', '2025-04-08', 'Single', 100.00),
+(3, '201', 2, '2025-04-05', '2025-04-07', 'PresidentialSuite', 500.00),
+(4, '202', 2, '2025-04-06', '2025-04-08', 'Single', 100.00),
 (5, NULL, NULL, '2025-04-07', '2025-04-09', 'Family', 200.00),
 (6, NULL, NULL, '2025-04-08', '2025-04-10', 'PresidentialSuite', 500.00),
 (7, NULL, NULL, '2025-04-09', '2025-04-11', 'Single', 100.00),
@@ -117,7 +117,8 @@ INSERT INTO booking (guest_id, room_id, floor, check_in, check_out, room_type, p
 -- Inserting data into 'keycard' table
 INSERT INTO keycard (booking_id, guest_id, room_id, key_pin, issued_at, expires_at) VALUES
 (1, 1, '101', 123456, '2025-04-03 10:00:00', '2025-04-06 10:00:00'),
-(2, 2, '102', 654321, '2025-04-04 10:00:00', '2025-04-07 10:00:00');
+(2, 2, '102', 654321, '2025-04-04 10:00:00', '2025-04-07 10:00:00'),
+(4, 4, '202', 654321, '2025-04-06 10:00:00', '2025-04-09 10:00:00');
 
 -- Insert data into roster
 INSERT INTO roster (date, floor, room_id, housekeeper_id, name, completed) VALUES
