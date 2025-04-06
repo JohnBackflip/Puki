@@ -3,6 +3,8 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from os import environ
 from datetime import datetime
+import random
+
 
 app = Flask(__name__)
 CORS(app)

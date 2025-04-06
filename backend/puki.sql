@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS room (
     room_type ENUM('Single', 'Family', 'PresidentialSuite') NOT NULL,
     key_pin INT,
     floor INT NOT NULL,
-    availability ENUM('VACANT', 'OCCUPIED', 'CLEANING') DEFAULT 'VACANT'
+    status ENUM('VACANT', 'OCCUPIED', 'CLEANING') DEFAULT 'VACANT'
 );
 
 -- Booking table
@@ -89,7 +89,7 @@ INSERT INTO guest (name, email, contact) VALUES
 ('Ella Young', 'ella@example.com', '1233337899');
 
 -- Insert data into room
-INSERT INTO room (room_id, room_type, key_pin, floor, availability) VALUES
+INSERT INTO room (room_id, room_type, key_pin, floor, status) VALUES
 ('101', 'Single', 123456, 1, 'OCCUPIED'),
 ('102', 'Family', 654321, 1, 'OCCUPIED'),
 ('201', 'PresidentialSuite', NULL, 2, 'VACANT'),

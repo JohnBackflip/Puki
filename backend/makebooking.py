@@ -11,6 +11,7 @@ CORS(app)
 BOOKING_URL = environ.get('BOOKING_URL', 'http://localhost:5002')
 GUEST_URL = environ.get('GUEST_URL', 'http://localhost:5011')
 PRICE_URL = environ.get('PRICE_URL', 'http://localhost:5003')
+NOTIFICATION_URL = environ.get('NOTIFICATION_URL', 'http://localhost:5007')
 
 # Health check
 @app.route("/health", methods=["GET"])
@@ -49,7 +50,7 @@ def create_booking():
     if not isinstance(guest_response, dict) or guest_response.get("code") != 200:
         return jsonify({"code": 400, "message": "Invalid guest_id. Guest does not exist."}), 400
 
-    
+
     # Assemble payload for booking
     booking_payload = {
         "guest_id": data["guest_id"],
@@ -72,7 +73,33 @@ def create_booking():
     if booking_response.get("code") != 201:
         return jsonify({"code": 500, "message": f"Booking creation failed: {booking_response.get('message')}"}), 500
 
+    booking_data = booking_response.get("data")
+
+    
+    #hardcoded since the telesign free account only allows for sms to one number 
+    guest_phone = "91455020"
+    # Send SMS Notification if phone is available
+    if guest_phone:
+        notification_payload = {
+            "recipient": guest_phone,
+            "message": (
+                f"Your booking is confirmed!\n"
+                f"Booking ID: {booking_data['booking_id']}\n"
+                f"Room Type: {booking_data['room_type']}\n"
+                f"Check-in: {booking_data['check_in']}\n"
+                f"Check-out: {booking_data['check_out']}\n"
+                f"Thank you for choosing Puki Hotel!"
+            ),
+            "type": "SMS"
+        }
+        try:
+            notify_response = invokes.invoke_http(f"{NOTIFICATION_URL}/notify", method="POST", json=notification_payload)
+            print("Notification sent:", notify_response)
+        except Exception as e:
+            print(" Failed to send notification:", e)
+
     return jsonify({"code": 201, "data": booking_response["data"]}), 201
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5013, debug=True)
