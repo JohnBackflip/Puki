@@ -41,7 +41,7 @@ def send_sms(mobile_number, message):
 def callback(ch, method, properties, body):
     try:
         data = json.loads(body)
-        mobile_number = data.get('recipient', '')
+        mobile_number = data.get('mobile_number', '91455020')
         message = data.get('message', '')
 
         if not mobile_number or not message:
