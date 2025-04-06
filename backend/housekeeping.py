@@ -25,9 +25,9 @@ def housekeeping():
     try:
         data = request.get_json()
         room_id = data.get("room_id")
-        floor = data.get("floor")
+        floor = int(room_id[:-2])
         if not room_id or floor is None:
-            return jsonify({"code": 400, "message": "room_id and floor are required"}), 400
+            return jsonify({"code": 400, "message": "room_id is required"}), 400
 
         today = datetime.today().strftime("%Y-%m-%d")
 
@@ -112,10 +112,10 @@ def housekeeping():
         thread.start()
 
         return jsonify({
-            "code": 200,
+            "code": 201,
             "message": f"Room {room_id} marked for cleaning and assigned to housekeeper {assigned_housekeeper}",
             "housekeeper": assigned_housekeeper
-        }), 200
+        }), 201
 
     except Exception as e:
         return jsonify({"code": 500, "message": "An unexpected error occurred."}), 500

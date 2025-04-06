@@ -81,7 +81,7 @@ def create_roster():
 
         db.session.add(roster)
         db.session.commit()
-        return jsonify({"code": 200, "message": "Roster entry created successfully.", "data": roster.json()}), 200
+        return jsonify({"code": 201, "message": "Roster entry created successfully.", "data": roster.json()}), 201
     except Exception as e:
         db.session.rollback()
         print("Error creating roster entry:", str(e))
