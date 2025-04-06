@@ -91,20 +91,24 @@ def checkout():
 
         # 4. Send SMS with feedback form
         feedback_url = "https://forms.gle/dKzRvA4dDMhsrC8D6"
-        sms_message = f"Thank you for staying with us, {name}! Please provide your feedback: {feedback_url}"
+        # sms_message = f"Thank you for staying with us, {name}! Please provide your feedback: {feedback_url}"
+        # channel, connection = get_rabbitmq_channel()
+        # message = json.dumps({'mobile_number': mobile_number, 'message': "Thank you for staying with Puki! We would love to hear your feedback: " + feedback_url})
+        # channel.basic_publish(exchange='', routing_key='sms_queue', body=message)
+        # connection.close()
         try:
-            msg = {
-            "message": sms_message,
-            "recipient": mobile_number,
-            "type": "SMS"
-            }
-            notification_result = invokes.invoke_http(NOTIFICATION_URL, method="POST", json=msg)
-            return notification_result
+            # msg = {
+            # "message": sms_message,
+            # "recipient": mobile_number,
+            # "type": "SMS"
+            # }
+            # notification_result = invokes.invoke_http(NOTIFICATION_URL, method="POST", json=msg)
+            # return notification_result
             # Publish to RabbitMQ (Doesn't work anymore)
-            # channel, connection = get_rabbitmq_channel()
-            # message = json.dumps({'mobile_number': mobile_number, 'message': "Thank you for staying with Puki! We would love to hear your feedback: " + feedback_url})
-            # channel.basic_publish(exchange='', routing_key='sms_queue', body=message)
-            # connection.close()
+            channel, connection = get_rabbitmq_channel()
+            message = json.dumps({'mobile_number': mobile_number, 'message': "Thank you for staying with Puki! We would love to hear your feedback: " + feedback_url})
+            channel.basic_publish(exchange='', routing_key='sms_queue', body=message)
+            connection.close()
         except Exception as e:
             print(f"Failed to queue SMS: {e}")
 
@@ -116,6 +120,17 @@ def checkout():
     except Exception as e:
         print(f"Error in checkout: {str(e)}")
         return jsonify({"code": 500, "message": "An error occurred during checkout."}), 500
+
+# For testing
+@app.route("/sms", methods=["POST"])
+def sms():
+    data = request.get_json()
+    mobile_number = data.get("mobile_number")
+    feedback_url = "https://forms.gle/dKzRvA4dDMhsrC8D6"
+    channel, connection = get_rabbitmq_channel()
+    message = json.dumps({'mobile_number': mobile_number, 'message': "Thank you for staying with Puki! We would love to hear your feedback: " + feedback_url})
+    channel.basic_publish(exchange='', routing_key='sms_queue', body=message)
+    connection.close()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5004, debug=True)
