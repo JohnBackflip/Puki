@@ -8,10 +8,11 @@ import traceback
 app = Flask(__name__)
 CORS(app)
 
-# Service URLs
-BOOKING_URL = environ.get('BOOKING_URL', 'http://localhost:5002')
-GUEST_URL = environ.get('GUEST_URL', 'http://localhost:5011')
-PRICE_URL = environ.get('PRICE_URL', 'http://localhost:5003')
+# Service URLs - use Docker service names instead of localhost
+BOOKING_URL = environ.get('BOOKING_URL', 'http://booking:5002')
+GUEST_URL = environ.get('GUEST_URL', 'http://guest:5011')
+ROOM_URL = environ.get('ROOM_URL', 'http://room:5008')
+DYNAMICPRICE_URL = environ.get('DYNAMICPRICE_URL', 'http://dynamicprice:5016')
 
 # Health check
 @app.route("/health", methods=["GET"])
@@ -53,7 +54,7 @@ def create_booking():
         if not isinstance(guest_response, dict) or guest_response.get("code") != 200:
             return jsonify({"code": 400, "message": "Invalid guest_id. Guest does not exist."}), 400
 
-    # Fetch dynamic price
+        # Fetch dynamic price
         price_url = f"{DYNAMICPRICE_URL}/dynamicprice?room_type={room_type}&date={check_in}"
         print(f"Calling dynamic price URL: {price_url}")
         dynamic_price_response = invokes.invoke_http(price_url, method="GET")
@@ -93,7 +94,11 @@ def create_booking():
         if booking_response.get("code") != 201:
             return jsonify({"code": 500, "message": f"Booking creation failed: {booking_response.get('message')}"}), 500
 
-    return jsonify({"code": 201, "data": booking_response["data"]}), 201
+        return jsonify({"code": 201, "data": booking_response["data"]}), 201
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"code": 500, "message": f"Internal server error: {str(e)}"}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5013, debug=True)
