@@ -118,6 +118,7 @@ def housekeeping():
         }), 201
 
     except Exception as e:
+        print("Error:", str(e))
         return jsonify({"code": 500, "message": "An unexpected error occurred."}), 500
 
 # simulate cleaning cycle
