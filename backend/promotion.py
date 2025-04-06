@@ -85,6 +85,49 @@ def get_promotions():
         "data": {"promotions": [promotion.json() for promotion in promotions]}
     }), 200
 
+# Get a specific promotion by ID
+@app.route("/promotion/<int:promo_id>", methods=["GET"])
+def get_promotion(promo_id):
+    promotion = Promotion.query.get(promo_id)
+    if not promotion:
+        return jsonify({"code": 404, "message": f"Promotion with ID {promo_id} not found."}), 404
+    
+    return jsonify({"code": 200, "data": promotion.json()}), 200
+
+# Update a promotion by ID
+@app.route("/promotion/<int:promo_id>", methods=["PUT"])
+def update_promotion(promo_id):
+    try:
+        promotion = Promotion.query.get(promo_id)
+        if not promotion:
+            return jsonify({"code": 404, "message": f"Promotion with ID {promo_id} not found."}), 404
+        
+        data = request.get_json()
+        
+        # Update promotion fields
+        promotion.promo_name = data.get("promo-name", promotion.promo_name)
+        promotion.promo_code = data.get("promo-code", promotion.promo_code)
+        
+        # Update dates if provided
+        if "promo-start" in data:
+            promotion.promo_start = datetime.strptime(data["promo-start"], "%Y-%m-%d")
+        if "promo-end" in data:
+            promotion.promo_end = datetime.strptime(data["promo-end"], "%Y-%m-%d")
+        
+        # Update discount and room type
+        promotion.promo_discount = data.get("promo-discount", promotion.promo_discount)
+        promotion.room_type = data.get("room-type", promotion.room_type)
+        
+        db.session.commit()
+        return jsonify({
+            "code": 200, 
+            "message": "Promotion updated successfully", 
+            "data": promotion.json()
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"code": 500, "message": f"Error updating promotion: {str(e)}"}), 500
+
 # Get applicable promotion
 @app.route("/promotion/applicable", methods=["GET"])
 def get_applicable_promotion():
@@ -105,6 +148,21 @@ def get_applicable_promotion():
             return jsonify({"code": 200, "data": promo.json()}), 200
 
     return jsonify({"code": 404, "message": "No applicable promotion found."}), 404
+
+# Delete a promotion by ID
+@app.route("/promotion/<int:promo_id>", methods=["DELETE"])
+def delete_promotion(promo_id):
+    try:
+        promotion = Promotion.query.get(promo_id)
+        if not promotion:
+            return jsonify({"code": 404, "message": f"Promotion with ID {promo_id} not found."}), 404
+        
+        db.session.delete(promotion)
+        db.session.commit()
+        return jsonify({"code": 200, "message": "Promotion deleted successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"code": 500, "message": f"Error deleting promotion: {str(e)}"}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5015, debug=True)

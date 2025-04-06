@@ -538,20 +538,20 @@
             // 1. Save Promotions to Backend
             document.getElementById("add-promo-btn").addEventListener("click", function() {
                 const promoData = {
-                    name: document.getElementById("promo-name").value,
-                    code: document.getElementById("promo-code").value,
-                    start_date: document.getElementById("promo-start").value,
-                    end_date: document.getElementById("promo-end").value,
-                    discount: parseFloat(document.getElementById("promo-discount").value),
-                    room_type: document.getElementById("promo-room-type").value
+                    "promo-name": document.getElementById("promo-name").value,
+                    "promo-code": document.getElementById("promo-code").value,
+                    "promo-start": document.getElementById("promo-start").value,
+                    "promo-end": document.getElementById("promo-end").value,
+                    "promo-discount": parseFloat(document.getElementById("promo-discount").value),
+                    "room-type": document.getElementById("promo-room-type").value
                 };
 
-                if (!promoData.name || !promoData.code || !promoData.start_date || !promoData.end_date || isNaN(promoData.discount)) {
+                if (!promoData["promo-name"] || !promoData["promo-code"] || !promoData["promo-start"] || !promoData["promo-end"] || isNaN(promoData["promo-discount"])) {
                     alert("Please fill in all fields.");
                     return;
                 }
 
-                fetch("http://localhost:5003/price/events", {
+                fetch("http://localhost:5015/promotion", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -576,31 +576,61 @@
             // 2. Fetch Promotions on Page Load
             document.addEventListener("DOMContentLoaded", function () {
                 // Load promotions
-                fetch("http://localhost:5003/price/events")
+                fetch("http://localhost:5015/promotion/all")
                     .then(response => response.json())
                     .then(data => {
-                        if (data.code === 200 && Array.isArray(data.data.promotions)) {
+                        if (data.code === 200 && data.data.promotions) {
                             const tableBody = document.getElementById("promotions-table").getElementsByTagName("tbody")[0];
                             tableBody.innerHTML = "";
 
                             data.data.promotions.forEach(promo => {
                                 const row = tableBody.insertRow();
                                 row.innerHTML = `
-                                    <td>${promo.name}</td>
-                                    <td>${promo.code}</td>
-                                    <td>${promo.start_date}</td>
-                                    <td>${promo.end_date}</td>
-                                    <td>${promo.discount}%</td>
+                                    <td>${promo.promo_name}</td>
+                                    <td>${promo.promo_code}</td>
+                                    <td>${promo.promo_start}</td>
+                                    <td>${promo.promo_end}</td>
+                                    <td>${promo.promo_discount}%</td>
                                     <td>${promo.room_type}</td>
                                     <td>
-                                        <button class="action-btn edit">Edit</button>
-                                        <button class="action-btn delete">Delete</button>
+                                        <button class="action-btn edit" data-id="${promo.promo_id}">Edit</button>
+                                        <button class="action-btn delete" data-id="${promo.promo_id}">Delete</button>
                                     </td>
                                 `;
+                            });
+
+                            // Add event listeners for delete buttons
+                            document.querySelectorAll('.action-btn.delete').forEach(button => {
+                                button.addEventListener('click', function() {
+                                    const promoId = this.getAttribute('data-id');
+                                    if (confirm('Are you sure you want to delete this promotion?')) {
+                                        deletePromotion(promoId);
+                                    }
+                                });
                             });
                         }
                     })
                     .catch(error => console.error("Failed to load promotions:", error));
+
+                // Function to delete a promotion
+                function deletePromotion(promoId) {
+                    fetch(`http://localhost:5015/promotion/${promoId}`, {
+                        method: 'DELETE'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.code === 200) {
+                            alert('✅ Promotion deleted successfully!');
+                            location.reload();
+                        } else {
+                            alert(`❌ Failed to delete promotion: ${data.message}`);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting promotion:', error);
+                        alert('An error occurred while deleting the promotion.');
+                    });
+                }
 
                 // Load initial room availability
                 fetch("http://localhost:5008/room")
@@ -700,7 +730,7 @@
                 }
             }
 
-            // 3. Save Room Availability
+            // 2. Save Room Availability
             document.getElementById('save-changes').addEventListener('click', () => {
                 const selectedDate = document.getElementById('availability-selected-date').textContent;
                 const singleCount = parseInt(document.getElementById('single-count').value);
@@ -857,6 +887,9 @@
 
                 updateRosterView(currentDate);
             });
+
+            // Call updateRosterView() on page load to populate the table
+            window.onload = updateRosterView(currentDate);
         </script>
 
         <style>
