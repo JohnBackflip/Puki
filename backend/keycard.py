@@ -117,7 +117,8 @@ def generate_keycard():
         import traceback
         traceback.print_exc()
         db.session.rollback()
-        return jsonify({"code": 500, "message": f"Failed to generate keycard: {str(e)}"}), 500
+        print("Failed to generate keycard:", str(e))
+        return jsonify({"code": 500, "message": "Failed to generate keycard."}), 500
     
 
 # Get pin for booking id (testing purposes)
@@ -131,7 +132,7 @@ def get_keycard(booking_id):
         return jsonify({"code": 200, "data": keycard.json()}) if keycard else (jsonify({"code": 404, "message": "Keycard not found."}), 404)
     except Exception as e:
         print(f"Error in get_keycard: {str(e)}")
-        return jsonify({"code": 500, "message": f"Error: {str(e)}"}), 500
+        return jsonify({"code": 500, "message": "Error getting keycard."}), 500
 
 # Generates new pin for the booking
 @app.route("/keycard/<int:booking_id>/renew", methods=["PUT"])
@@ -150,7 +151,8 @@ def renew_keycard(booking_id):
         return jsonify({"code": 200, "data": keycard.json()}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"code": 500, "message": f"Error renewing keycard: {str(e)}"}), 500
+        print("Error renewing keycard:", str(e))
+        return jsonify({"code": 500, "message": "Error renewing keycard."}), 500
 
 # Expire keycard (when user checks out)
 @app.route("/keycard/<int:booking_id>/expire", methods=["PUT"])
@@ -167,7 +169,8 @@ def expire_keycard(booking_id):
         return jsonify({"code": 200, "message": "Keycard expired successfully."}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"code": 500, "message": f"Error expiring keycard: {str(e)}"}), 500
+        print("Error expiring keycard:", str(e))
+        return jsonify({"code": 500, "message": "Error expiring keycard."}), 500
 
 # Used when booking is extended
 @app.route("/keycard/<int:booking_id>/update-expiry", methods=["PUT"])
@@ -186,7 +189,8 @@ def update_keycard_expiry(booking_id):
         return jsonify({"code": 200, "data": keycard.json()}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"code": 500, "message": f"Error updating keycard expiry: {str(e)}"}), 500
+        print("Error updating keycard expiry:", str(e))
+        return jsonify({"code": 500, "message": "Error updating keycard expiry."}), 500
 
 # Delete keycard by booking ID
 @app.route("/keycard/<booking_id>", methods=["DELETE"])
@@ -210,7 +214,7 @@ def delete_keycard(booking_id):
     except Exception as e:
         print(f"Error in delete_keycard: {str(e)}")
         db.session.rollback()
-        return jsonify({"code": 500, "message": f"Error: {str(e)}"}), 500
+        return jsonify({"code": 500, "message": "Error in deleting keycard."}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5012, debug=True)

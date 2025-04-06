@@ -69,7 +69,8 @@ def create_room():
         return jsonify({"code": 201, "data": new_room.json()}), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify({"code": 500, "message": f"Error creating room: {str(e)}"}), 500
+        print("Error creating room:", str(e))
+        return jsonify({"code": 500, "message": "Error creating room."}), 500
 
 # get room by ID
 @app.route("/room/<string:room_id>", methods=["GET"])
@@ -173,7 +174,8 @@ def update_room_availability():
         }), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"code": 500, "message": f"Error updating room availability: {str(e)}"}), 500
+        print("Error updating room availability:", str(e))
+        return jsonify({"code": 500, "message": "Error updating room availability."}), 500
 
 # Update room status - DONT REMOVE THIS
 @app.route("/room/<string:room_id>/update-status", methods=["PUT"])
@@ -198,7 +200,8 @@ def update_room_status(room_id):
         return jsonify({"code": 200, "message": "Room status updated successfully.", "data": room.json()}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"code": 500, "message": f"Error updating room status: {str(e)}"}), 500
+        print("Error updating room status:", str(e))
+        return jsonify({"code": 500, "message": "Error updating room status."}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5008, debug=True)

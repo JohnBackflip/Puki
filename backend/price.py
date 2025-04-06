@@ -165,7 +165,8 @@ def adjust_prices_by_season():
                 "data": {"promotion": data}
             }), 201
         except Exception as e:
-            return jsonify({"code": 500, "message": str(e)}), 500
+            print("Error creating promotion:", str(e))
+            return jsonify({"code": 500, "message": "Error creating promotion."}), 500
             
     # Original seasonal pricing logic
     season = data.get("season", "").strip().lower()
@@ -194,7 +195,8 @@ def adjust_prices_by_season():
         return jsonify({"code": 200, "season": season, "updated": updated_prices}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"code": 500, "error": str(e)}), 500
+        print("Error updating price:", str(e))
+        return jsonify({"code": 500, "error": "Error updating price."}), 500
 
 # Get promotions
 @app.route("/price/events", methods=["GET"])

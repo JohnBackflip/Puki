@@ -67,7 +67,7 @@ def create_booking():
     print("Booking response:", booking_response)
 
     if not isinstance(booking_response, dict):
-        return jsonify({"code": 500, "message": "Invalid booking response format."}), 500
+        return jsonify({"code": 400, "message": "Invalid booking response format."}), 400
 
     if booking_response.get("code") != 201:
         return jsonify({"code": 500, "message": f"Booking creation failed: {booking_response.get('message')}"}), 500

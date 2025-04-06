@@ -84,7 +84,8 @@ def create_roster():
         return jsonify({"message": "Roster entry created successfully.", "data": roster.json()}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": f"Error creating roster entry: {str(e)}"}), 500
+        print("Error creating roster entry:", str(e))
+        return jsonify({"code": 500, "error": "Error creating roster entry."}), 500
 
 # Get roster by housekeeper ID
 @app.route("/roster/housekeeper/<int:housekeeper_id>", methods=["GET"])

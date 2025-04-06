@@ -109,7 +109,7 @@ def checkout():
 
     except Exception as e:
         print(f"Error in checkout: {str(e)}")
-        return jsonify({"code": 500, "message": f"Error during checkout: {str(e)}"}), 500
+        return jsonify({"code": 500, "message": "An error occurred during checkout."}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5004, debug=True)

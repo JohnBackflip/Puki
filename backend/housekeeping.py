@@ -97,7 +97,7 @@ def housekeeping():
             
             if not isinstance(room_response, dict):
                 print(f"DEBUG: Room response is not a dict: {room_response}")
-                return jsonify({"code": 500, "message": "Failed to update room status - invalid response format"}), 500
+                return jsonify({"code": 400, "message": "Failed to update room status - invalid response format"}), 400
                 
             if room_response.get("code") != 200:
                 print(f"DEBUG: Room update failed with code: {room_response.get('code')} - {room_response.get('message', 'No error message')}")
@@ -105,7 +105,7 @@ def housekeeping():
                 
         except Exception as e:
             print(f"DEBUG: Exception updating room status: {str(e)}")
-            return jsonify({"code": 500, "message": f"Exception updating room status: {str(e)}"}), 500
+            return jsonify({"code": 500, "message": "Error updating room status."}), 500
 
         # 3. Simulate cleaning cycle in background
         thread = threading.Thread(target=simulate_cleaning_cycle, args=(room_id,))
@@ -118,7 +118,7 @@ def housekeeping():
         }), 200
 
     except Exception as e:
-        return jsonify({"code": 500, "message": f"Unexpected error: {str(e)}"}), 500
+        return jsonify({"code": 500, "message": "An unexpected error occurred."}), 500
 
 # simulate cleaning cycle
 def simulate_cleaning_cycle(room_id):
