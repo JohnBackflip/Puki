@@ -109,7 +109,8 @@ def update_booking(booking_id):
         return jsonify({"code": 200, "data": booking.json()}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"code": 500, "message": f"Error updating booking: {str(e)}"}), 500
+        print("Error updating booking:", str(e))
+        return jsonify({"code": 500, "message": "Error updating booking:"}), 500
 
 #cancel booking
 @app.route("/booking/<int:booking_id>", methods=["DELETE"])
@@ -124,7 +125,8 @@ def cancel_booking(booking_id):
         return jsonify({"code": 200, "message": "Booking cancelled and deleted."}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"code": 500, "message": f"Error deleting booking: {str(e)}"}), 500
+        print("Error deleting booking:", str(e))
+        return jsonify({"code": 500, "message": "Error deleting booking."}), 500
 
 #get active bookings
 @app.route("/booking/active", methods=["GET"])
@@ -221,7 +223,8 @@ def create_booking():
         return jsonify({"code": 201, "data": new_booking.json()}), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify({"code": 500, "message": f"Error creating booking: {str(e)}"}), 500
+        print(str(e))
+        return jsonify({"code": 500, "message": "Error creating booking."}), 500
 
 #assign room to booking
 @app.route("/booking/<int:booking_id>/assign-room", methods=["PUT"])

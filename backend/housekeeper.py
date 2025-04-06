@@ -60,7 +60,8 @@ def create_housekeeper():
         return jsonify({"code": 201, "data": new_housekeeper.json()}), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify({"code": 500, "message": f"Error: {str(e)}"}), 500
+        print(str(e))
+        return jsonify({"code": 500, "message": "Error adding housekeeper."}), 500
 
 # Get housekeeper by floor 
 @app.route("/housekeeper/floor/<int:floor>", methods=["GET"])

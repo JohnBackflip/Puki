@@ -73,7 +73,6 @@ def create_guest():
         return jsonify({"code": 201, "data": guest.json()}), 201, {"Location": f"/guests/{guest.guest_id}"}
     except:
         db.session.rollback()
-        print("Error while creating guest:", str(e))
         traceback.print_exc()  # ← this prints full stack trace in logs
         return jsonify({"code": 500, "message": "Error creating guest."}), 500
 
@@ -91,7 +90,7 @@ def update_guest(guest_id):
             return jsonify({"code": 200, "data": guest.json()}), 200
         except:
             db.session.rollback()
-            return jsonify({"code": 500, "data": {"guest_id": guest.guest_id}, "message": f"Error updating guest. "}), 500
+            return jsonify({"code": 500, "data": {"guest_id": guest.guest_id}, "message": "Error updating guest. "}), 500
     return jsonify({"code": 404, "message": "Guest not found."}), 404
     
 #delete guest

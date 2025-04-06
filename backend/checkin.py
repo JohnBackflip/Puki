@@ -42,7 +42,7 @@ def self_checkin():
     try:
         check_in_dt = datetime.strptime(check_in_date, "%Y-%m-%d").date()
     except Exception:
-        return jsonify({"code": 500, "message": "Invalid check-in date format."}), 500
+        return jsonify({"code": 400, "message": "Invalid check-in date format."}), 400
 
     if today != check_in_dt:
         return jsonify({
