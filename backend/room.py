@@ -196,5 +196,35 @@ def update_room_status(room_id):
         db.session.rollback()
         return jsonify({"code": 500, "message": f"Error updating room status: {str(e)}"}), 500
 
+#CALLED BY CHECKIN SERVICE DO NOT TOUCH 
+@app.route("/room/next-available/<string:room_type>", methods=["GET"])
+def get_next_available_room(room_type):
+    try:
+        # Get the first vacant room of the requested type
+        room = db.session.scalar(
+            db.select(Room)
+            .filter_by(room_type=room_type, availability="VACANT")
+            .order_by(Room.room_id)
+        )
+
+        if not room:
+            return jsonify({
+                "code": 404,
+                "message": f"No vacant rooms of type '{room_type}'."
+            }), 404
+
+        return jsonify({
+            "code": 200,
+            "data": {
+                "room_id": room.room_id,
+                "floor": room.floor,
+                "room_type": room.room_type
+            }
+        }), 200
+
+    except Exception as e:
+        print(f"Error finding next available room: {e}")
+        return jsonify({"code": 500, "message": "Server error."}), 500
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5008, debug=True)

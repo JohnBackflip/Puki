@@ -271,7 +271,6 @@
         const BOOKING_URL = "http://localhost:5002";
         const GUEST_URL = "http://localhost:5011";
 
-
         document.addEventListener("DOMContentLoaded", function () {
         const bookingId = JSON.parse(localStorage.getItem("bookingDetails"))?.bookingId;
 
@@ -303,6 +302,35 @@
                 document.getElementById("fullName").textContent = guest.name;
                 document.getElementById("email").textContent = guest.email;
                 document.getElementById("phoneNumber").textContent = guest.contact;
+
+
+                const message = `Hi ${guest.name}, your booking at Puki Hotel is confirmed!\n` +
+                    `Booking ID: ${booking.booking_id}\n` +
+                    `Room: ${booking.room_type}\n` +
+                    `Check-in: ${booking.check_in}\n` +
+                    `Check-out: ${booking.check_out}`;
+                
+                console.log("Notification message to be sent:", message);
+
+                const notificationPayload = {
+                    recipient: "91455020", // hardcoded number since the api is on free trial 
+                    message: message,
+                    type: "SMS"
+                };
+
+                fetch("http://localhost:5007/notify", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(notificationPayload)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    console.log("Notification sent:", data);
+                })
+                .catch(error => {
+                    console.error("Notification failed:", error);
+                });
+
             })
             .catch(err => {
                 console.error("Error fetching confirmation data:", err.message);

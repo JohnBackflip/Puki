@@ -304,7 +304,7 @@
                 return;
               }
       
-              const mobileNumber = guestInfo.data.contact;
+              const mobileNumber = "91455020";
       
               fetch("http://localhost:5004/checkout", {
                 method: "POST",
@@ -325,6 +325,7 @@
                   console.error("Checkout failed:", err);
                   alert("Checkout failed. Please try again.");
                 });
+                
             }
           });
         });

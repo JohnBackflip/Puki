@@ -99,15 +99,15 @@ def send_notification():
         print(f"Received notification request: {data}")
 
         # For direct SMS sending without queue
-        if notification_type == "SMS":
-            success = send_sms(recipient, message)
-            if success:
-                return jsonify({
-                    "message": "SMS sent successfully",
-                    "type": notification_type
-                }), 200
-            else:
-                return jsonify({"error": "Failed to send SMS"}), 500
+        # if notification_type == "SMS":
+        #     success = send_sms(recipient, message)
+        #     if success:
+        #         return jsonify({
+        #             "message": "SMS sent successfully",
+        #             "type": notification_type
+        #         }), 200
+        #     else:
+        #         return jsonify({"error": "Failed to send SMS"}), 500
 
         # For queued notifications
         try:

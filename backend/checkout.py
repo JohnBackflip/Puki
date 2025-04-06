@@ -79,28 +79,28 @@ def checkout():
         housekeeping_result = invokes.invoke_http(HOUSEKEEPING_URL, method="POST", json=room_json)
         print("Housekeeping result:", housekeeping_result)
 
+        room_update_url = f"http://room:5008/room/{room_id}/update-status"
+        update_payload = {"status": "VACANT"}
+        room_update_response = invokes.invoke_http(room_update_url, method="PUT", json=update_payload)
+        print("Room status update response:", room_update_response)
+
         # 4. Send SMS with feedback form
         feedback_url = "https://forms.gle/dKzRvA4dDMhsrC8D6"
-        sms_message = f"Thank you for staying with us, {name}! Please provide your feedback: {feedback_url}"
-        
         try:
             channel, connection = get_rabbitmq_channel()
+            message = json.dumps({
+                'mobile_number': mobile_number,
+                'message': f"Thank you for staying with Puki! We would love to hear your feedback: {feedback_url}"
+            })
             channel.basic_publish(
                 exchange='',
                 routing_key='sms_queue',
-                body=json.dumps({
-                    "message": sms_message,
-                    "recipient": mobile_number,
-                    "type": "SMS"
-                }),
-                properties=pika.BasicProperties(
-                    delivery_mode=2,  # make message persistent
-                )
+                body=message
             )
             connection.close()
+            print("Feedback SMS queued.")
         except Exception as e:
-            print(f"Error sending SMS: {str(e)}")
-            # Continue with checkout even if SMS fails
+            print(f"Failed to queue SMS: {e}")
 
         return jsonify({
             "code": 200,

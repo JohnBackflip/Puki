@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from datetime import datetime
+import pika
+import json
 import invokes
 from os import environ
 import traceback
@@ -8,10 +10,11 @@ import traceback
 app = Flask(__name__)
 CORS(app)
 
-# Service URLs
-BOOKING_URL = environ.get('BOOKING_URL', 'http://localhost:5002')
-GUEST_URL = environ.get('GUEST_URL', 'http://localhost:5011')
-PRICE_URL = environ.get('PRICE_URL', 'http://localhost:5003')
+# Service URLs - use Docker service names instead of localhost
+BOOKING_URL = environ.get('BOOKING_URL', 'http://booking:5002')
+GUEST_URL = environ.get('GUEST_URL', 'http://guest:5011')
+ROOM_URL = environ.get('ROOM_URL', 'http://room:5008')
+DYNAMICPRICE_URL = environ.get('DYNAMICPRICE_URL', 'http://dynamicprice:5016')
 
 # Health check
 @app.route("/health", methods=["GET"])
@@ -53,7 +56,7 @@ def create_booking():
         if not isinstance(guest_response, dict) or guest_response.get("code") != 200:
             return jsonify({"code": 400, "message": "Invalid guest_id. Guest does not exist."}), 400
 
-    # Fetch dynamic price
+        # Fetch dynamic price
         price_url = f"{DYNAMICPRICE_URL}/dynamicprice?room_type={room_type}&date={check_in}"
         print(f"Calling dynamic price URL: {price_url}")
         dynamic_price_response = invokes.invoke_http(price_url, method="GET")
@@ -93,7 +96,36 @@ def create_booking():
         if booking_response.get("code") != 201:
             return jsonify({"code": 500, "message": f"Booking creation failed: {booking_response.get('message')}"}), 500
 
-    return jsonify({"code": 201, "data": booking_response["data"]}), 201
+        return jsonify({"code": 201, "data": booking_response["data"]}), 201
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"code": 500, "message": f"Internal server error: {str(e)}"}), 500
+
+def publish_notification(mobile_number, message):
+    try:
+        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+        channel = connection.channel()
+        channel.queue_declare(queue='sms_queue', durable=True)
+
+        payload = {
+            "mobile_number": mobile_number,
+            "message": message
+        }
+
+        channel.basic_publish(
+            exchange='',
+            routing_key='sms_queue',
+            body=json.dumps(payload),
+            properties=pika.BasicProperties(
+                delivery_mode=2  # make message persistent
+            )
+        )
+        connection.close()
+        print("Notification queued for:", mobile_number)
+    except Exception as e:
+        print("Failed to queue SMS:", e)
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5013, debug=True)
