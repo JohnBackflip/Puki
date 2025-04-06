@@ -247,47 +247,61 @@
     <script>
         document.addEventListener("DOMContentLoaded", () => {
           const guestForm = document.getElementById("guestForm");
-      
+        
           guestForm.addEventListener("submit", function (e) {
             e.preventDefault();
-      
-            const fullName = document.getElementById("fullName").value;
-            const email = document.getElementById("email").value;
-            const bookingID = document.getElementById("bookingID").value;
-      
-            // Prepare payload
+        
+            const fullName = document.getElementById("fullName").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const bookingID = document.getElementById("bookingID").value.trim();
+        
+            if (!fullName || !email || !bookingID) {
+              alert("Please fill in all fields.");
+              return;
+            }
+        
             const payload = {
-              fullName: fullName,
+              name: fullName,
               email: email,
-              bookingID: bookingID
+              booking_id: bookingID
             };
-      
-            fetch("http://localhost:8000/checkin", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify(payload)
+        
+            fetch("http://localhost:5005/checkin", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    booking_id: parseInt(bookingID),
+                    name: fullName
+                })
             })
-              .then(response => {
-                if (!response.ok) throw new Error("Check-in failed.");
-                return response.json();
-              })
-              .then(data => {
-                console.log("Check-in successful:", data);
-                alert("Check-in successful!");
-      
-                // Optionally store check-in details or redirect
-                localStorage.setItem("checkInSuccess", "true");
-                // window.location.href = "some-confirmation-page.html";
-              })
-              .catch(error => {
-                console.error("Error during check-in:", error);
-                alert("There was an issue with your check-in. Please try again.");
-              });
+
+            .then(response => response.json())
+            .then(data => {
+              if (data.code !== 200) {
+                throw new Error(data.message || "Check-in failed.");
+              }
+        
+              const keycard = data.keycard || {};
+              const roomId = keycard.room_id || "N/A";
+              const keyPin = keycard.key_pin || "N/A";
+        
+              alert(`Check-in successful!`);
+                // Store booking ID for the next page
+                localStorage.setItem("checkedInBookingID", bookingID);
+
+                // Redirect to the new page
+                window.location.href = "checkin-confirmation.html";
+            })
+            .catch(error => {
+              console.error("Check-in error:", error);
+              alert("There was an issue with your check-in. Please verify your details and try again.");
+            });
           });
         });
-      </script>
+    </script>
+      
 
 </body>
 

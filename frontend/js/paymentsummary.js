@@ -91,11 +91,19 @@ document.addEventListener("DOMContentLoaded", () => {
         else roomType = roomTypeRaw.trim();  
 
         const price = parseFloat(localStorage.getItem("roomPrice") || "0");
+        // Parse the raw dates from localStorage
         const rawCheckIn = localStorage.getItem("checkInDate");
         const rawCheckOut = localStorage.getItem("checkOutDate");
 
-        const checkIn = new Date(rawCheckIn).toISOString().split("T")[0];
-        const checkOut = new Date(rawCheckOut).toISOString().split("T")[0];
+        // Add 1 day and format to YYYY-MM-DD
+        const checkInDate = new Date(rawCheckIn);
+        checkInDate.setDate(checkInDate.getDate() + 1);
+
+        const checkOutDate = new Date(rawCheckOut);
+        checkOutDate.setDate(checkOutDate.getDate() + 1);
+
+        const checkIn = checkInDate.toISOString().split("T")[0];
+        const checkOut = checkOutDate.toISOString().split("T")[0];
 
         if (!fullName || !email || !contact || !roomType || !checkIn || !checkOut || !price) {
             alert("Please fill in all required fields.");

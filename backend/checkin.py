@@ -27,64 +27,84 @@ def self_checkin():
     booking_id = data.get("booking_id")
     name = data.get("name")
 
-    # Verify booking exists
+    # 1. Get booking
     booking_response = invokes.invoke_http(f"{BOOKING_URL}/booking/{booking_id}", method="GET")
     if booking_response.get("code") != 200:
         return jsonify({"code": 400, "message": "Invalid booking ID."}), 400
 
-    booking_data = booking_response.get("data", {})
-    guest_id = booking_data.get("guest_id") or booking_data.get("customer_id")
-    room_id = booking_data.get("room_id")
-    check_in = booking_data.get("check_in")
+    booking = booking_response["data"]
+    guest_id = booking.get("guest_id")
+    room_type = booking.get("room_type")
+    check_in_date = booking.get("check_in")
 
-    # Check-in date validation
-    # Check-in date validation
+    # 2. Validate today's date == check-in date
     today = datetime.utcnow().date()
     try:
-        check_in_date = datetime.strptime(check_in, "%Y-%m-%d").date()
+        check_in_dt = datetime.strptime(check_in_date, "%Y-%m-%d").date()
     except Exception:
         return jsonify({"code": 500, "message": "Invalid check-in date format."}), 500
 
-    if today != check_in_date:
+    if today != check_in_dt:
         return jsonify({
             "code": 400,
-            "message": f"Check-in is only allowed on the check-in date ({check_in_date}). Today is {today}."
+            "message": f"Check-in only allowed on the check-in date ({check_in_dt}). Today is {today}."
         }), 400
 
-    # Verify guest exists
+    # 3. Get guest info and validate name
     guest_response = invokes.invoke_http(f"{GUEST_URL}/guest/{guest_id}", method="GET")
     if guest_response.get("code") != 200:
-        return jsonify({"code": 400, "message": "Guest record not found."}), 400
+        return jsonify({"code": 400, "message": "Guest not found."}), 400
 
-    guest_data = guest_response.get("data", {})
-    if guest_data.get("name", "").lower() != name.lower():
-        return jsonify({"code": 400, "message": "Full name does not match booking record."}), 400
+    guest = guest_response["data"]
+    if guest.get("name", "").strip().lower() != name.strip().lower():
+        return jsonify({"code": 400, "message": "Guest name does not match booking record."}), 400
 
-    # Generate keycard
-    keycard_url = f"{KEYCARD_URL}/keycard"
+    # 4. Fetch available room by type
+    room_response = invokes.invoke_http(f"{ROOM_URL}/room/next-available/{room_type}", method="GET")
+    if room_response.get("code") != 200:
+        return jsonify({"code": 400, "message": "No vacant room of this type available today."}), 400
+
+    room = room_response["data"]
+    room_id = room["room_id"]
+    floor = room["floor"]
+
+    # 5. Update booking to assign room
+    update_booking_url = f"{BOOKING_URL}/booking/{booking_id}/assign-room"
+    update_payload = {
+        "room_id": room_id,
+        "floor": floor
+    }
+    booking_update_response = invokes.invoke_http(update_booking_url, json=update_payload, method="PUT")
+    if booking_update_response.get("code") != 200:
+        return jsonify({"code": 500, "message": "Failed to update booking with room assignment."}), 500
+
+    # 6. Mark room as OCCUPIED
+    update_room_url = f"{ROOM_URL}/room/{room_id}/update-status"
+    room_status_response = invokes.invoke_http(update_room_url, json={"status": "OCCUPIED"}, method="PUT")
+    if room_status_response.get("code") != 200:
+        return jsonify({"code": 500, "message": "Failed to update room status."}), 500
+
+    # 7. Generate keycard
     keycard_payload = {
         "booking_id": booking_id,
         "guest_id": guest_id,
         "room_id": room_id
     }
-
-    keycard_response = invokes.invoke_http(keycard_url, json=keycard_payload, method="POST")
-
+    keycard_response = invokes.invoke_http(f"{KEYCARD_URL}/keycard", json=keycard_payload, method="POST")
     if keycard_response.get("code") not in [200, 201]:
-        return jsonify({"code": 500, "message": "Failed to generate keycard."}), 500
-
-    keycard_data = keycard_response.get("data")
-
-    # Update booking status to CHECKED-IN
-    update_booking_url = f"{BOOKING_URL}/bookings/{booking_id}"
-    update_payload = {"status": "CHECKED-IN"}
-    invokes.invoke_http(update_booking_url, json=update_payload, method="PUT")
+        return jsonify({"code": 500, "message": "Keycard generation failed."}), 500
 
     return jsonify({
         "code": 200,
-        "message": "Self check-in successful. Use this PIN to access your room.",
-        "keycard": keycard_data
+        "message": "Check-in successful. Keycard issued.",
+        "data": {
+            "room_id": room_id,
+            "floor": floor,
+            "keycard": keycard_response["data"]
+        }
     }), 200
+
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5005, debug=True)

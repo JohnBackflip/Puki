@@ -223,5 +223,31 @@ def create_booking():
         db.session.rollback()
         return jsonify({"code": 500, "message": f"Error creating booking: {str(e)}"}), 500
 
+#assign room to booking
+@app.route("/booking/<int:booking_id>/assign-room", methods=["PUT"])
+def assign_room(booking_id):
+    booking = db.session.scalar(db.select(Booking).filter_by(booking_id=booking_id))
+    if not booking:
+        return jsonify({"code": 404, "message": "Booking not found."}), 404
+
+    data = request.get_json()
+
+    room_id = data.get("room_id")
+    floor = data.get("floor")
+
+    if not room_id or floor is None:
+        return jsonify({"code": 400, "message": "room_id and floor are required."}), 400
+
+    booking.room_id = room_id
+    booking.floor = floor
+
+    try:
+        db.session.commit()
+        return jsonify({"code": 200, "message": "Room assigned successfully.", "data": booking.json()}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"code": 500, "message": f"Failed to assign room: {str(e)}"}), 500
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5002, debug=True)
