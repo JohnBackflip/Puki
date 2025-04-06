@@ -115,9 +115,7 @@ services:
     networks:
       - puki-network
     environment:
-      - DATABASE_URL=mysql+mysqlconnector://root@host.docker.internal:3306/puki
-      - ROOM_URL=http://room:5008
-      - BOOKING_URL=http://booking:8000
+      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
     healthcheck:
       test: ["CMD", "python", "-c", "import http.client; conn = http.client.HTTPConnection('localhost:5008'); conn.request('GET', '/health'); response = conn.getresponse(); exit(0 if response.status == 200 else 1)"]
       interval: 10s
@@ -136,9 +134,7 @@ services:
     networks:
       - puki-network
     environment:
-      - DATABASE_URL=mysql+mysqlconnector://root@host.docker.internal:3306/puki
-      - GUEST_URL=http://guest:5011
-      - PRICE_URL=http://price:5003
+      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
     healthcheck:
       test: ["CMD", "python", "-c", "import http.client; conn = http.client.HTTPConnection('localhost:5002'); conn.request('GET', '/health'); response = conn.getresponse(); exit(0 if response.status == 200 else 1)"]
       interval: 10s
@@ -157,7 +153,7 @@ services:
     networks:
       - puki-network
     environment:
-      - DATABASE_URL=mysql+mysqlconnector://root@host.docker.internal:3306/puki
+      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
     healthcheck:
       test: ["CMD", "python", "-c", "import http.client; conn = http.client.HTTPConnection('localhost:5011'); conn.request('GET', '/health'); response = conn.getresponse(); exit(0 if response.status == 200 else 1)"]
       interval: 10s
@@ -176,7 +172,6 @@ services:
     networks:
       - puki-network
     environment:
-      - DATABASE_URL=mysql+mysqlconnector://root@host.docker.internal:3306/puki
       - ROOM_URL=http://room:5008
       - ROSTER_URL=http://roster:5009
       - HOUSEKEEPER_URL=http://housekeeper:5014
@@ -198,7 +193,7 @@ services:
     networks:
       - puki-network
     environment:
-      - DATABASE_URL=mysql+mysqlconnector://root@host.docker.internal:3306/puki
+      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
     healthcheck:
       test: ["CMD", "python", "-c", "import http.client; conn = http.client.HTTPConnection('localhost:5014'); conn.request('GET', '/health'); response = conn.getresponse(); exit(0 if response.status == 200 else 1)"]
       interval: 10s
@@ -217,8 +212,7 @@ services:
     networks:
       - puki-network
     environment:
-      - DATABASE_URL=mysql+mysqlconnector://root@host.docker.internal:3306/puki
-      - ROOM_URL=http://room:5008
+      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
     healthcheck:
       test: ["CMD", "python", "-c", "import http.client; conn = http.client.HTTPConnection('localhost:5009'); conn.request('GET', '/health'); response = conn.getresponse(); exit(0 if response.status == 200 else 1)"]
       interval: 10s
@@ -237,7 +231,7 @@ services:
     networks:
       - puki-network  
     environment:
-      - DATABASE_URL=mysql+mysqlconnector://root@host.docker.internal:3306/puki
+      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
     healthcheck:
       test: ["CMD", "python", "-c", "import http.client; conn = http.client.HTTPConnection('localhost:5012'); conn.request('GET', '/health'); response = conn.getresponse(); exit(0 if response.status == 200 else 1)"]
       interval: 10s
@@ -275,7 +269,7 @@ services:
     networks:
       - puki-network
     environment:
-      - DATABASE_URL=mysql+mysqlconnector://root@host.docker.internal:3306/puki
+      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
     healthcheck:
       test: ["CMD", "python", "-c", "import http.client; conn = http.client.HTTPConnection('localhost:5003'); conn.request('GET', '/health'); response = conn.getresponse(); exit(0 if response.status == 200 else 1)"]
       interval: 10s
@@ -294,7 +288,6 @@ services:
     networks:
       - puki-network
     environment:
-      - DATABASE_URL=mysql+mysqlconnector://root@host.docker.internal:3306/puki
       - GUEST_URL=http://guest:5011
       - BOOKING_URL=http://booking:5002
     healthcheck:
@@ -315,7 +308,6 @@ services:
     networks:
       - puki-network
     environment:
-      - DATABASE_URL=mysql+mysqlconnector://root@host.docker.internal:3306/puki
       - GUEST_URL=http://guest:5011
       - BOOKING_URL=http://booking:5002
       - ROOM_URL=http://room:5008
@@ -338,7 +330,6 @@ services:
     networks:
       - puki-network
     environment:
-      - DATABASE_URL=mysql+mysqlconnector://root@host.docker.internal:3306/puki
       - GUEST_URL=http://guest:5011
       - BOOKING_URL=http://booking:5002
       - PRICE_URL=http://price:5003
@@ -348,3 +339,43 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  ###################################
+  #12 Promotion: The Promotion microservice
+  ###################################
+  promotion:
+    build:
+      context: ./
+      dockerfile: promotion.Dockerfile
+    ports:
+      - "5015:5015"
+    networks:
+      - puki-network
+    environment:
+      - DATABASE_URL=mysql+mysqlconnector://root:root@host.docker.internal:3306/puki
+    healthcheck:
+      test: ["CMD", "python", "-c", "import http.client; conn = http.client.HTTPConnection('localhost:5005'); conn.request('GET', '/health'); response = conn.getresponse(); exit(0 if response.status == 200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ###################################
+  #13 Dynamic Price: The Dynamic Price microservice
+  ###################################
+  dynamicprice:
+    build:
+      context: ./
+      dockerfile: dynamicprice.Dockerfile
+    ports:
+      - "5016:5016"
+    networks:
+      - puki-network
+    environment:
+      - PRICE_URL=http://price:5003
+      - PROMOTION_URL=http://promotion:5015
+    healthcheck:
+      test: ["CMD", "python", "-c", "import http.client; conn = http.client.HTTPConnection('localhost:5005'); conn.request('GET', '/health'); response = conn.getresponse(); exit(0 if response.status == 200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
