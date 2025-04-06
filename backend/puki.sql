@@ -52,8 +52,7 @@ ALTER TABLE room ADD INDEX (floor);
 CREATE TABLE IF NOT EXISTS housekeeper (
     housekeeper_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
-    floor INT NOT NULL,
-    FOREIGN KEY (floor) REFERENCES room(floor)
+    floor INT NOT NULL
 );
 
 -- Roster table
