@@ -111,12 +111,6 @@ def update_booking(booking_id):
         db.session.rollback()
         return jsonify({"code": 500, "message": f"Error updating booking: {str(e)}"}), 500
 
-#postman
-# {    
-#     "check_in": "2025-05-25",    
-#     "check_out": "2025-05-28"                              
-# }
-
 #cancel booking
 @app.route("/booking/<int:booking_id>", methods=["DELETE"])
 def cancel_booking(booking_id):

@@ -118,7 +118,7 @@ INSERT INTO booking (guest_id, room_id, floor, check_in, check_out, room_type, p
 INSERT INTO keycard (booking_id, guest_id, room_id, key_pin, issued_at, expires_at) VALUES
 (1, 1, '101', 123456, '2025-04-03 10:00:00', '2025-04-06 10:00:00'),
 (2, 2, '102', 654321, '2025-04-04 10:00:00', '2025-04-07 10:00:00'),
-(4, 4, '202', 654321, '2025-04-06 10:00:00', '2025-04-09 10:00:00');
+(4, 4, '202', 321654, '2025-04-06 10:00:00', '2025-04-09 10:00:00');
 
 -- Insert data into roster
 INSERT INTO roster (date, floor, room_id, housekeeper_id, name, completed) VALUES
