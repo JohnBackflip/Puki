@@ -175,7 +175,7 @@ def update_room_availability():
         db.session.rollback()
         return jsonify({"code": 500, "message": f"Error updating room availability: {str(e)}"}), 500
 
-# Update room status
+# Update room status - DONT REMOVE THIS
 @app.route("/room/<string:room_id>/update-status", methods=["PUT"])
 def update_room_status(room_id):
     data = request.get_json()
