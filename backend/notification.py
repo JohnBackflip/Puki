@@ -12,7 +12,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Get RabbitMQ URL from environment variable
-RABBITMQ_URL = environ.get('RABBITMQ_URL', 'amqp://guest:guest@localhost:5672/')
+RABBITMQ_URL = environ.get('RABBITMQ_URL', 'amqp://guest:guest@puki-rabbit:5672/')
 
 # Telesign API Credentials
 TELESIGN_CUSTOMER_ID = environ.get('TELESIGN_CUSTOMER_ID', "58F7A11F-17B7-420E-B011-2F45F2AE226F")
